@@ -68,7 +68,7 @@
                         <option value="Personal/Sick Leave">Personal/Sick Leave</option>
                         <option value="Annual Leave">Annual Leave</option>
                     </select>
-                    <p id="lateNotice" style="display: none;" class="mt-2 text-sm text-orange-600 font-semibold">⏰ It's past 9:00 AM - Try to be more punctual!.</p>
+                    <p id="lateNotice" style="display: none;" class="mt-2 text-sm text-orange-600 font-semibold">⏰ It's past 9:02 AM - "Present" option is no longer available.</p>
                 </div>
 
                 <!-- Location -->
@@ -92,7 +92,7 @@
 
                 <!-- Submit Button -->
                 <button id="submitBtn" class="w-full ubl-gradient text-white px-6 py-5 rounded-lg text-xl font-bold hover:opacity-90 transition mt-4">
-                    <span id="submitText">✓ SUBMIT ATTENDANCE</span>
+                    <span id="submitText">✓ Submit Attendance</span>
                 </button>
             </div>
         </div>
@@ -337,12 +337,20 @@
                 const today = new Date().toLocaleDateString('en-US');
                 localStorage.setItem('lastSubmitDate', today);
                 
-                showSuccess();
+                // Show success message for 5 seconds
+                document.getElementById('successMsg').style.display = 'block';
+                document.getElementById('errorMsg').style.display = 'none';
                 
-                // Lock the form after successful submission
+                // After 5 seconds, lock the form and show the locked message
                 setTimeout(() => {
+                    document.getElementById('successMsg').style.display = 'none';
                     checkAndLockForm();
-                }, 2000);
+                }, 5000);
+                
+                // Re-enable button immediately (just hide it visually)
+                submitBtn.disabled = false;
+                submitText.textContent = '✓ Submit Attendance';
+                submitBtn.style.opacity = '1';
                 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             })
@@ -350,7 +358,7 @@
                 console.error('Error:', error);
                 showError('Failed to submit. Please try again.');
                 submitBtn.disabled = false;
-                submitText.textContent = '✓ SUBMIT ATTENDANCE';
+                submitText.textContent = '✓ Submit Attendance';
                 submitBtn.style.opacity = '1';
             });
         };
