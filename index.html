@@ -213,33 +213,25 @@
             }, 5000);
         }
 
-// Update employee dropdown based on cluster
-document.getElementById('cluster').addEventListener('change', function() {
-    const cluster = this.value;
-    const employeeSelect = document.getElementById('employeeName');
-    const today = new Date().toLocaleDateString('en-US');
-    
-    employeeSelect.innerHTML = '<option value="">-- Select Your Name --</option>';
-    
-    if (cluster && employees[cluster]) {
-        employeeSelect.disabled = false;
-        employees[cluster].forEach(name => {
-            // Check if this person has already submitted today
-            const submissionKey = `submitted_${cluster}_${name}_${today}`;
-            const hasSubmitted = localStorage.getItem(submissionKey);
+        // Update employee dropdown based on cluster
+        document.getElementById('cluster').addEventListener('change', function() {
+            const cluster = this.value;
+            const employeeSelect = document.getElementById('employeeName');
             
-            // Only add to dropdown if they haven't submitted
-            if (!hasSubmitted) {
-                const option = document.createElement('option');
-                option.value = name;
-                option.textContent = name;
-                employeeSelect.appendChild(option);
+            employeeSelect.innerHTML = '<option value="">-- Select Your Name --</option>';
+            
+            if (cluster && employees[cluster]) {
+                employeeSelect.disabled = false;
+                employees[cluster].forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    employeeSelect.appendChild(option);
+                });
+            } else {
+                employeeSelect.disabled = true;
             }
         });
-    } else {
-        employeeSelect.disabled = true;
-    }
-});
 
         document.getElementById('locationBtn').onclick = function() {
             const btn = this;
@@ -335,34 +327,7 @@ document.getElementById('cluster').addEventListener('change', function() {
                 address: locationData.address,
                 notes: notes
             };
-            .then(response => response.text())
-            .then(data => {
-    
-    // Mark device as submitted for today
-    const today = new Date().toLocaleDateString('en-US');
-    localStorage.setItem('lastSubmitDate', today);
-    
-    // Mark this specific person as submitted for today
-    const submissionKey = `submitted_${cluster}_${name}_${today}`;
-    localStorage.setItem(submissionKey, 'true');
-    
-    // Show success message for 5 seconds
-    document.getElementById('successMsg').style.display = 'block';
-    document.getElementById('errorMsg').style.display = 'none';
-    
-    // After 5 seconds, lock the form and show the locked message
-    setTimeout(() => {
-        document.getElementById('successMsg').style.display = 'none';
-        checkAndLockForm();
-    }, 5000);
-    
-    // Re-enable button immediately (just hide it visually)
-    submitBtn.disabled = false;
-    submitText.textContent = '✓ Submit Attendance';
-    submitBtn.style.opacity = '1';
-    
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-})
+            
             const formData = new FormData();
             formData.append('data', JSON.stringify(payload));
             
@@ -370,7 +335,29 @@ document.getElementById('cluster').addEventListener('change', function() {
                 method: 'POST',
                 body: formData
             })
-            
+            .then(response => response.text())
+            .then(data => {
+                // Mark device as submitted for today
+                const today = new Date().toLocaleDateString('en-US');
+                localStorage.setItem('lastSubmitDate', today);
+                
+                // Show success message for 5 seconds
+                document.getElementById('successMsg').style.display = 'block';
+                document.getElementById('errorMsg').style.display = 'none';
+                
+                // After 5 seconds, lock the form and show the locked message
+                setTimeout(() => {
+                    document.getElementById('successMsg').style.display = 'none';
+                    checkAndLockForm();
+                }, 5000);
+                
+                // Re-enable button immediately (just hide it visually)
+                submitBtn.disabled = false;
+                submitText.textContent = '✓ Submit Attendance';
+                submitBtn.style.opacity = '1';
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            })
             .catch(error => {
                 console.error('Error:', error);
                 showError('Failed to submit. Please try again.');
