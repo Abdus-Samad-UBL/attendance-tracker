@@ -223,9 +223,10 @@
             
             if (cluster && employees[cluster]) {
                 employeeSelect.disabled = false;
+                
                 employees[cluster].forEach(name => {
                     // Check if this person has already submitted today
-                    const submissionKey = `submitted_${cluster}_${name}_${today}`;
+                    const submissionKey = 'submitted_' + cluster + '_' + name + '_' + today;
                     const hasSubmitted = localStorage.getItem(submissionKey);
 
                     // Only add to dropdown if they haven't submitted
@@ -240,7 +241,7 @@
                 employeeSelect.disabled = true;
             }
         });
-
+        
         document.getElementById('locationBtn').onclick = function() {
             const btn = this;
             const btnText = document.getElementById('locationBtnText');
@@ -343,6 +344,7 @@
                 method: 'POST',
                 body: formData
             })
+            
             .then(response => response.text())
             .then(data => {
                 // Mark device as submitted for today
@@ -350,10 +352,10 @@
                 localStorage.setItem('lastSubmitDate', today);
 
                 // Mark this specific person as submitted for today
-                const submissionKey = 'submitted_${cluster}_${name}_${today}`;
+                const submissionKey = 'submitted_' + cluster + '_' + name + '_' + today;
                 localStorage.setItem(submissionKey, 'true');
                 
-                // Show success message for 5 seconds
+                // Show success message for 7 seconds
                 document.getElementById('successMsg').style.display = 'block';
                 document.getElementById('errorMsg').style.display = 'none';
                 
@@ -370,6 +372,7 @@
                 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             })
+            
             .catch(error => {
                 console.error('Error:', error);
                 showError('Failed to submit. Please try again.');
