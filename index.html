@@ -68,7 +68,7 @@
                         <option value="Personal/Sick Leave">Personal/Sick Leave</option>
                         <option value="Annual Leave">Annual Leave</option>
                     </select>
-                    <p id="lateNotice" style="display: none;" class="mt-2 text-sm text-orange-600 font-semibold">⏰ It's past 9:00 AM - "Present" option is no longer available.</p>
+                    <p id="lateNotice" style="display: none;" class="mt-2 text-sm text-orange-600 font-semibold">⏰ It's past 9:02 AM - "Present" option is no longer available.</p>
                 </div>
 
                 <!-- Location -->
@@ -104,7 +104,10 @@
     </div>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw4blMS4G_mIhNLi2o_TUDo6dWwqaJ2c-Cb6BXiWzLu_0Mm-VLdiHv7QnsRjOsunDWc/exec';
+        // ⚠️ REPLACE 'PASTE_YOUR_CHECK_URL_HERE' WITH YOUR NEW DEPLOYMENT URL
+        const SUBMIT_URL = 'https://script.google.com/macros/s/AKfycbw4blMS4G_mIhNLi2o_TUDo6dWwqaJ2c-Cb6BXiWzLu_0Mm-VLdiHv7QnsRjOsunDWc/exec';
+        const CHECK_URL = 'https://script.google.com/macros/s/AKfycbxcHlexL5KZH5SR9OdByejARxIXL1laADLHLiUwxiIgcXk7D7OGBWRpoLYJfmnP4Iod/exec';
+        
         let locationData = null;
 
         // Check if device has already submitted today
@@ -124,7 +127,6 @@
                 document.getElementById('notes').disabled = true;
                 document.getElementById('submitBtn').disabled = true;
                 
-                // Show locked message
                 const errorMsg = document.getElementById('errorMsg');
                 const errorText = document.getElementById('errorText');
                 errorText.textContent = '🔒 Attendance already submitted from this device today. Please use a different device or try again tomorrow.';
@@ -167,25 +169,20 @@
             ]
         };
 
-        // Check form lock on page load
         window.onload = function() {
             checkAndLockForm();
             checkTimeForPresent();
         };
 
-        // Check if it's past 9:02 AM Pakistan time and hide "Present" option
         function checkTimeForPresent() {
-            // Get current time in Pakistan timezone (PKT = UTC+5)
             const now = new Date();
             const pakistanTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' }));
             const hours = pakistanTime.getHours();
             const minutes = pakistanTime.getMinutes();
             
-            // Convert to total minutes since midnight for easy comparison
             const currentTotalMinutes = (hours * 60) + minutes;
-            const cutoffTotalMinutes = (9 * 60) + 2; // 9:02 AM = 542 minutes
+            const cutoffTotalMinutes = (9 * 60) + 2;
             
-            // If time is 9:02 AM or later
             if (currentTotalMinutes >= cutoffTotalMinutes) {
                 const presentOption = document.getElementById('presentOption');
                 if (presentOption) {
@@ -213,35 +210,62 @@
             }, 5000);
         }
 
-        // Update employee dropdown based on cluster
-        document.getElementById('cluster').addEventListener('change', function() {
+        // Update employee dropdown based on cluster - WITH REAL-TIME FILTERING
+        document.getElementById('cluster').addEventListener('change', async function() {
             const cluster = this.value;
             const employeeSelect = document.getElementById('employeeName');
-            const today = new Date().toLocaleDateString('en-US');
             
-            employeeSelect.innerHTML = '<option value="">-- Select Your Name --</option>';
+            employeeSelect.innerHTML = '<option value="">-- Loading names... --</option>';
+            employeeSelect.disabled = true;
             
             if (cluster && employees[cluster]) {
-                employeeSelect.disabled = false;
-                
-                employees[cluster].forEach(name => {
-                    // Check if this person has already submitted today
-                    const submissionKey = 'submitted_' + cluster + '_' + name + '_' + today;
-                    const hasSubmitted = localStorage.getItem(submissionKey);
-
-                    // Only add to dropdown if they haven't submitted
-                    if (!hasSubmitted){
+                try {
+                    // Fetch list of people who already submitted today
+                    const response = await fetch(CHECK_URL);
+                    const submittedToday = await response.json();
+                    
+                    // Create a set of submitted names for this cluster
+                    const submittedNames = new Set(
+                        submittedToday
+                            .filter(s => s.cluster === cluster)
+                            .map(s => s.name)
+                    );
+                    
+                    employeeSelect.innerHTML = '<option value="">-- Select Your Name --</option>';
+                    employeeSelect.disabled = false;
+                    
+                    // Add only names that haven't submitted yet
+                    employees[cluster].forEach(name => {
+                        if (!submittedNames.has(name)) {
+                            const option = document.createElement('option');
+                            option.value = name;
+                            option.textContent = name;
+                            employeeSelect.appendChild(option);
+                        }
+                    });
+                    
+                    // If no names available
+                    if (employeeSelect.options.length === 1) {
+                        employeeSelect.innerHTML = '<option value="">✅ All employees have submitted today</option>';
+                    }
+                } catch (error) {
+                    console.error('Error fetching submitted names:', error);
+                    // Fallback: show all names
+                    employeeSelect.innerHTML = '<option value="">-- Select Your Name --</option>';
+                    employeeSelect.disabled = false;
+                    employees[cluster].forEach(name => {
                         const option = document.createElement('option');
                         option.value = name;
                         option.textContent = name;
                         employeeSelect.appendChild(option);
-                    }
-                });
+                    });
+                }
             } else {
+                employeeSelect.innerHTML = '<option value="">-- Select Cluster First --</option>';
                 employeeSelect.disabled = true;
             }
         });
-        
+
         document.getElementById('locationBtn').onclick = function() {
             const btn = this;
             const btnText = document.getElementById('locationBtnText');
@@ -340,39 +364,29 @@
             const formData = new FormData();
             formData.append('data', JSON.stringify(payload));
             
-            fetch(SCRIPT_URL, {
+            fetch(SUBMIT_URL, {
                 method: 'POST',
                 body: formData
             })
-            
             .then(response => response.text())
             .then(data => {
-                // Mark device as submitted for today
                 const today = new Date().toLocaleDateString('en-US');
                 localStorage.setItem('lastSubmitDate', today);
-
-                // Mark this specific person as submitted for today
-                const submissionKey = 'submitted_' + cluster + '_' + name + '_' + today;
-                localStorage.setItem(submissionKey, 'true');
                 
-                // Show success message for 7 seconds
                 document.getElementById('successMsg').style.display = 'block';
                 document.getElementById('errorMsg').style.display = 'none';
                 
-                // After 7 seconds, lock the form and show the locked message
                 setTimeout(() => {
                     document.getElementById('successMsg').style.display = 'none';
                     checkAndLockForm();
-                }, 7000);
+                }, 5000);
                 
-                // Re-enable button immediately (just hide it visually)
                 submitBtn.disabled = false;
                 submitText.textContent = '✓ Submit Attendance';
                 submitBtn.style.opacity = '1';
                 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             })
-            
             .catch(error => {
                 console.error('Error:', error);
                 showError('Failed to submit. Please try again.');
