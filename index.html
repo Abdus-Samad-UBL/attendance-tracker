@@ -1,506 +1,803 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>UBL Attendance Tracker</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
+
     <style>
+
         .ubl-gradient {
+
             background: linear-gradient(135deg, #054166 0%, #249ACC 100%);
+
         }
+
         .ubl-border {
+
             border-color: #054166;
+
         }
+
     </style>
+
 </head>
+
 <body class="bg-gray-50 min-h-screen p-4">
+
     <div class="max-w-2xl mx-auto">
+
         <!-- Header -->
+
         <div class="ubl-gradient rounded-t-2xl shadow-xl p-6 text-white">
+
             <div class="flex items-center justify-center gap-3 mb-2">
+
                 <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
+
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+
                 </svg>
+
                 <h1 class="text-3xl font-bold">Attendance System</h1>
+
             </div>
+
             <p class="text-center text-blue-100 text-sm">L&D Department</p>
+
         </div>
-        
+
+
+
         <div class="bg-white rounded-b-2xl shadow-xl p-8">
+
             <!-- Success Message -->
+
             <div id="successMsg" style="display: none;" class="mb-6 p-4 bg-blue-100 border-2 border-blue-600 rounded-lg text-blue-800 font-semibold text-center">
+
                 ✔ You're in! Have a productive day today!
+
             </div>
-            
+
+
+
             <!-- Error Message -->
+
             <div id="errorMsg" style="display: none;" class="mb-6 p-4 bg-red-100 border-2 border-red-500 rounded-lg text-red-800 font-semibold text-center">
+
                 ❌ <span id="errorText">Error occurred</span>
+
             </div>
-            
+
+
+
             <div class="space-y-5">
+
                 <!-- Cluster Selection -->
+
                 <div>
+
                     <label class="block text-sm font-bold text-gray-700 mb-2">🏢 Select Cluster *</label>
+
                     <select id="cluster" class="w-full px-4 py-3 border-2 ubl-border rounded-lg text-lg focus:ring-2 focus:ring-blue-600">
+
                         <option value="">-- Select Cluster --</option>
+
                         <option value="South">South</option>
+
                         <option value="Central">Central</option>
+
                         <option value="North">North</option>
+
                     </select>
+
                 </div>
+
+
 
                 <!-- Employee Name -->
+
                 <div>
+
                     <label class="block text-sm font-bold text-gray-700 mb-2">👤 Employee Name *</label>
+
                     <select id="employeeName" class="w-full px-4 py-3 border-2 ubl-border rounded-lg text-lg focus:ring-2 focus:ring-blue-600" disabled>
+
                         <option value="">-- Select Cluster First --</option>
+
                     </select>
+
                 </div>
+
+
 
                 <!-- Status -->
+
                 <div>
+
                     <label class="block text-sm font-bold text-gray-700 mb-2">📊 Attendance Status *</label>
+
                     <select id="status" class="w-full px-4 py-3 border-2 ubl-border rounded-lg text-lg focus:ring-2 focus:ring-blue-600">
+
                         <option value="">-- Select Status --</option>
+
                         <option value="Present" id="presentOption">Present</option>
+
                         <option value="Late">Late</option>
+
                         <option value="Personal/Sick Leave">Personal/Sick Leave</option>
+
                         <option value="Annual Leave">Annual Leave</option>
+
                     </select>
-                    <p id="lateNotice" style="display: none;" class="mt-2 text-sm text-orange-600 font-semibold">⏰ It's past 9:02 AM - "Present" option is no longer available.</p>
+
+                    <p id="lateNotice" style="display: none;" class="mt-2 text-sm text-orange-600 font-semibold">⏰ It's past 9:00 AM - "Present" option is no longer available.</p>
+
                 </div>
 
-                <!-- Leave Dates (only show for leaves) -->
-                <div id="leaveDatesSection" style="display: none;">
-                    <div class="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 mb-3">
-                        <p class="text-sm text-yellow-800 font-semibold mb-3">📅 Select Leave Duration</p>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Start Date *</label>
-                                <input type="date" id="leaveStartDate" class="w-full px-3 py-2 border-2 border-yellow-400 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">End Date *</label>
-                                <input type="date" id="leaveEndDate" class="w-full px-3 py-2 border-2 border-yellow-400 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500">
-                            </div>
-                        </div>
-                        <p class="text-xs text-yellow-700 mt-2">Leave will be marked for all dates in this range</p>
-                    </div>
-                </div>
+
 
                 <!-- Location -->
+
                 <div>
+
                     <label class="block text-sm font-bold text-gray-700 mb-2">📍 Location *</label>
+
                     <button id="locationBtn" type="button" class="w-full ubl-gradient text-white px-6 py-4 rounded-lg text-lg font-bold hover:opacity-90 transition">
+
                         <span id="locationBtnText">Click to Get Location</span>
+
                     </button>
+
                     <div id="locationInfo" style="display: none;" class="mt-3 p-4 bg-blue-50 border-2 border-blue-300 rounded-lg">
+
                         <p class="text-sm font-semibold text-blue-800">✅ Location Captured!</p>
+
                         <p class="text-sm mt-1"><strong>Coordinates:</strong> <span id="coords"></span></p>
+
                         <p class="text-sm"><strong>Address:</strong> <span id="addr"></span></p>
+
                     </div>
+
                 </div>
+
+
 
                 <!-- Notes -->
+
                 <div>
+
                     <label class="block text-sm font-bold text-gray-700 mb-2">📝 Notes (Optional)</label>
+
                     <textarea id="notes" class="w-full px-4 py-3 border-2 ubl-border rounded-lg focus:ring-2 focus:ring-blue-600" rows="3" placeholder="Any additional comments..."></textarea>
+
                 </div>
 
+
+
                 <!-- Submit Button -->
+
                 <button id="submitBtn" class="w-full ubl-gradient text-white px-6 py-5 rounded-lg text-xl font-bold hover:opacity-90 transition mt-4">
+
                     <span id="submitText">✓ Submit Attendance</span>
+
                 </button>
+
             </div>
+
         </div>
-        
+
+
+
         <!-- Footer -->
+
         <div class="text-center mt-4 text-gray-600 text-sm">
+
             <p>© United Bank Limited - Attendance Management System</p>
+
         </div>
+
     </div>
 
+
+
     <script>
+
+        // ⚠️ REPLACE 'PASTE_YOUR_CHECK_URL_HERE' WITH YOUR NEW DEPLOYMENT URL
+
         const SUBMIT_URL = 'https://script.google.com/macros/s/AKfycbw4blMS4G_mIhNLi2o_TUDo6dWwqaJ2c-Cb6BXiWzLu_0Mm-VLdiHv7QnsRjOsunDWc/exec';
-        const CHECK_URL = 'PASTE_YOUR_CHECK_URL_HERE';
-        
+
+        const CHECK_URL = 'https://script.google.com/macros/s/AKfycbxcHlexL5KZH5SR9OdByejARxIXL1laADLHLiUwxiIgcXk7D7OGBWRpoLYJfmnP4Iod/exec';
+
+
+
         let locationData = null;
 
+
+
+        // Check if device has already submitted today
+
         function hasSubmittedToday() {
+
             const lastSubmit = localStorage.getItem('lastSubmitDate');
+
             const today = new Date().toLocaleDateString('en-US');
+
             return lastSubmit === today;
+
         }
+
+
+
+        // Lock the form if already submitted today
 
         function checkAndLockForm() {
+
             if (hasSubmittedToday()) {
+
                 document.getElementById('cluster').disabled = true;
+
                 document.getElementById('employeeName').disabled = true;
+
                 document.getElementById('status').disabled = true;
+
                 document.getElementById('locationBtn').disabled = true;
+
                 document.getElementById('notes').disabled = true;
+
                 document.getElementById('submitBtn').disabled = true;
-                
+
+
+
                 const errorMsg = document.getElementById('errorMsg');
+
                 const errorText = document.getElementById('errorText');
+
                 errorText.textContent = '🔒 Attendance already submitted from this device today. Please use a different device or try again tomorrow.';
+
                 errorMsg.style.display = 'block';
+
                 errorMsg.style.backgroundColor = '#FEF3C7';
+
                 errorMsg.style.borderColor = '#F59E0B';
+
                 errorMsg.querySelector('span').style.color = '#92400E';
-                
+
+
+
                 return true;
+
             }
+
             return false;
+
         }
+
+
+
+        // Employee data by cluster
 
         const employees = {
+
             'South': [
+
                 'Abdus Samad',
+
                 'Aliza Khan',
+
                 'Diana Vivian Dsouza',
+
                 'Fouzia Aslam',
+
                 'Jason Michael Clive Dsouza',
+
                 'Muhammad Shaheer Ali Khan',
+
                 'Nabeel ur Rehman',
+
                 'Syed Ali Haider Mehdi',
+
                 'Syeda Kanwal Sultana'
+
             ],
+
             'Central': [
+
                 'Javed Hussain',
+
                 'Khadija Adil',
+
                 'Khawaja Fahad Tabish',
+
                 'Nadia Batool',
+
                 'Radiya Faysal',
+
                 'Rizwan Hameed',
+
                 'Sauood Sadiq'
+
             ],
+
             'North': [
+
                 'Anjum Minhas',
+
                 'Mubasher Iqbal',
+
                 'Shahid Iqbal'
+
             ]
+
         };
+
+
 
         window.onload = function() {
+
             checkAndLockForm();
+
             checkTimeForPresent();
-            
-            // Set min date for leave dates to today
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('leaveStartDate').setAttribute('min', today);
-            document.getElementById('leaveEndDate').setAttribute('min', today);
+
         };
+
+
 
         function checkTimeForPresent() {
+
             const now = new Date();
+
             const pakistanTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' }));
+
             const hours = pakistanTime.getHours();
+
             const minutes = pakistanTime.getMinutes();
-            
+
+
+
             const currentTotalMinutes = (hours * 60) + minutes;
+
             const cutoffTotalMinutes = (9 * 60) + 2;
-            
+
+
+
             if (currentTotalMinutes >= cutoffTotalMinutes) {
+
                 const presentOption = document.getElementById('presentOption');
+
                 if (presentOption) {
+
                     presentOption.style.display = 'none';
+
                     presentOption.disabled = true;
+
                 }
+
                 document.getElementById('lateNotice').style.display = 'block';
+
             }
+
         }
+
+
 
         function showError(msg) {
+
             document.getElementById('errorText').textContent = msg;
+
             document.getElementById('errorMsg').style.display = 'block';
+
             document.getElementById('successMsg').style.display = 'none';
+
             setTimeout(() => {
+
                 document.getElementById('errorMsg').style.display = 'none';
+
             }, 5000);
+
         }
+
+
 
         function showSuccess() {
+
             document.getElementById('successMsg').style.display = 'block';
+
             document.getElementById('errorMsg').style.display = 'none';
+
             setTimeout(() => {
+
                 document.getElementById('successMsg').style.display = 'none';
-            }, 5000);
+
+            }, 8000);
+
         }
 
-        // Show/hide leave dates based on status selection
-        document.getElementById('status').addEventListener('change', function() {
-            const status = this.value;
-            const leaveDatesSection = document.getElementById('leaveDatesSection');
-            
-            if (status === 'Personal/Sick Leave' || status === 'Annual Leave') {
-                leaveDatesSection.style.display = 'block';
-            } else {
-                leaveDatesSection.style.display = 'none';
-            }
-        });
 
-        // Update end date minimum when start date changes
-        document.getElementById('leaveStartDate').addEventListener('change', function() {
-            document.getElementById('leaveEndDate').setAttribute('min', this.value);
-        });
+
+        // Update employee dropdown based on cluster - WITH REAL-TIME FILTERING
 
         document.getElementById('cluster').addEventListener('change', async function() {
+
             const cluster = this.value;
+
             const employeeSelect = document.getElementById('employeeName');
-            
-            employeeSelect.innerHTML = '<option value="">-- Loading names... --</option>';
+
+
+
+
+            employeeSelect.innerHTML = '<option value="">-- Verifying...... --</option>';
+
+
+            employeeSelect.innerHTML = '<option value="">Verifying...Please Wait...</option>';
+
             employeeSelect.disabled = true;
-            
+
+
+
             if (cluster && employees[cluster]) {
+
                 try {
+
+                    // Fetch list of people who already submitted today
+
                     const response = await fetch(CHECK_URL);
+
                     const submittedToday = await response.json();
-                    
+
+
+
+                    // Create a set of submitted names for this cluster
+
                     const submittedNames = new Set(
+
                         submittedToday
+
                             .filter(s => s.cluster === cluster)
+
                             .map(s => s.name)
+
                     );
-                    
+
+
+
                     employeeSelect.innerHTML = '<option value="">-- Select Your Name --</option>';
+
                     employeeSelect.disabled = false;
-                    
+
+
+
+                    // Add only names that haven't submitted yet
+
                     employees[cluster].forEach(name => {
+
                         if (!submittedNames.has(name)) {
+
                             const option = document.createElement('option');
+
                             option.value = name;
+
                             option.textContent = name;
+
                             employeeSelect.appendChild(option);
+
                         }
+
                     });
-                    
+
+
+
+                    // If no names available
+
                     if (employeeSelect.options.length === 1) {
+
                         employeeSelect.innerHTML = '<option value="">✅ All employees have submitted today</option>';
+
                     }
+
                 } catch (error) {
+
                     console.error('Error fetching submitted names:', error);
+
+                    // Fallback: show all names
+
                     employeeSelect.innerHTML = '<option value="">-- Select Your Name --</option>';
+
                     employeeSelect.disabled = false;
+
                     employees[cluster].forEach(name => {
+
                         const option = document.createElement('option');
+
                         option.value = name;
+
                         option.textContent = name;
+
                         employeeSelect.appendChild(option);
+
                     });
+
                 }
+
             } else {
+
                 employeeSelect.innerHTML = '<option value="">-- Select Cluster First --</option>';
+
                 employeeSelect.disabled = true;
+
             }
+
         });
 
+
+
         document.getElementById('locationBtn').onclick = function() {
+
             const btn = this;
+
             const btnText = document.getElementById('locationBtnText');
-            
+
+
+
             btnText.textContent = '⏳ Getting location...';
+
             btn.disabled = true;
+
             btn.style.opacity = '0.6';
-            
+
+
+
             if (!navigator.geolocation) {
+
                 showError('Your browser does not support location services');
+
                 btnText.textContent = 'Click to Get Location';
+
                 btn.disabled = false;
+
                 btn.style.opacity = '1';
+
                 return;
+
             }
-            
+
+
+
             navigator.geolocation.getCurrentPosition(
+
                 async function(position) {
+
                     locationData = {
+
                         lat: position.coords.latitude,
+
                         lng: position.coords.longitude
+
                     };
-                    
+
+
+
                     document.getElementById('coords').textContent = 
+
                         locationData.lat.toFixed(6) + ', ' + locationData.lng.toFixed(6);
-                    
+
+
+
                     try {
+
                         const res = await fetch(
+
                             'https://nominatim.openstreetmap.org/reverse?format=json&lat=' + 
+
                             locationData.lat + '&lon=' + locationData.lng
+
                         );
+
                         const data = await res.json();
+
                         locationData.address = data.display_name || 'Address not available';
+
                         document.getElementById('addr').textContent = locationData.address;
+
                     } catch (err) {
+
                         locationData.address = 'Could not fetch address';
+
                         document.getElementById('addr').textContent = locationData.address;
+
                     }
-                    
+
+
+
                     document.getElementById('locationInfo').style.display = 'block';
+
                     btnText.textContent = '✅ Location Captured';
+
                     btn.disabled = false;
+
                     btn.style.opacity = '1';
+
                 },
+
                 function(error) {
+
                     showError('Could not get location. Please enable location permissions.');
+
                     btnText.textContent = 'Click to Get Location';
+
                     btn.disabled = false;
+
                     btn.style.opacity = '1';
+
                 }
+
             );
+
         };
 
-        // Generate dates between start and end
-        function getDatesBetween(startDate, endDate) {
-            const dates = [];
-            const current = new Date(startDate);
-            const end = new Date(endDate);
-            
-            while (current <= end) {
-                dates.push(new Date(current).toLocaleDateString('en-US'));
-                current.setDate(current.getDate() + 1);
-            }
-            
-            return dates;
-        }
 
-        document.getElementById('submitBtn').onclick = async function() {
+
+        document.getElementById('submitBtn').onclick = function() {
+
             const cluster = document.getElementById('cluster').value;
+
             const name = document.getElementById('employeeName').value;
+
             const status = document.getElementById('status').value;
+
             const notes = document.getElementById('notes').value;
+
             const submitBtn = this;
+
             const submitText = document.getElementById('submitText');
-            
+
+
+
             if (!cluster) {
+
                 showError('Please select a cluster');
+
                 return;
+
             }
+
             if (!name) {
+
                 showError('Please select your name');
+
                 return;
+
             }
+
             if (!status) {
+
                 showError('Please select status');
+
                 return;
+
             }
-            
-            // Check if leave dates are required
-            let leaveDates = [];
-            if (status === 'Personal/Sick Leave' || status === 'Annual Leave') {
-                const startDate = document.getElementById('leaveStartDate').value;
-                const endDate = document.getElementById('leaveEndDate').value;
-                
-                if (!startDate || !endDate) {
-                    showError('Please select start and end dates for your leave');
-                    return;
-                }
-                
-                if (new Date(endDate) < new Date(startDate)) {
-                    showError('End date cannot be before start date');
-                    return;
-                }
-                
-                leaveDates = getDatesBetween(startDate, endDate);
-            }
-            
+
             if (!locationData) {
+
                 showError('Please capture your location first');
+
                 return;
+
             }
-            
+
+
+
             submitBtn.disabled = true;
+
             submitText.textContent = '⏳ Submitting...';
+
             submitBtn.style.opacity = '0.6';
-            
+
+
+
             const now = new Date();
-            
-            // If it's a leave, submit multiple entries (one for each day)
-            if (leaveDates.length > 0) {
-                try {
-                    for (const leaveDate of leaveDates) {
-                        const payload = {
-                            cluster: cluster,
-                            name: name,
-                            status: status,
-                            date: leaveDate,
-                            time: now.toLocaleTimeString('en-US'),
-                            latitude: locationData.lat,
-                            longitude: locationData.lng,
-                            address: locationData.address,
-                            notes: notes + ' (Leave duration: ' + leaveDates[0] + ' to ' + leaveDates[leaveDates.length - 1] + ')'
-                        };
-                        
-                        const formData = new FormData();
-                        formData.append('data', JSON.stringify(payload));
-                        
-                        await fetch(SUBMIT_URL, {
-                            method: 'POST',
-                            body: formData
-                        });
-                    }
-                    
-                    const today = new Date().toLocaleDateString('en-US');
-                    localStorage.setItem('lastSubmitDate', today);
-                    
-                    document.getElementById('successMsg').textContent = '✔ Leave submitted for ' + leaveDates.length + ' day(s)!';
-                    document.getElementById('successMsg').style.display = 'block';
-                    document.getElementById('errorMsg').style.display = 'none';
-                    
-                    setTimeout(() => {
-                        document.getElementById('successMsg').style.display = 'none';
-                        checkAndLockForm();
-                    }, 5000);
-                    
-                } catch (error) {
-                    console.error('Error:', error);
-                    showError('Failed to submit leave. Please try again.');
-                }
-            } else {
-                // Regular attendance (Present/Late)
-                const payload = {
-                    cluster: cluster,
-                    name: name,
-                    status: status,
-                    date: now.toLocaleDateString('en-US'),
-                    time: now.toLocaleTimeString('en-US'),
-                    latitude: locationData.lat,
-                    longitude: locationData.lng,
-                    address: locationData.address,
-                    notes: notes
-                };
-                
-                const formData = new FormData();
-                formData.append('data', JSON.stringify(payload));
-                
-                fetch(SUBMIT_URL, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.text())
-                .then(data => {
-                    const today = new Date().toLocaleDateString('en-US');
-                    localStorage.setItem('lastSubmitDate', today);
-                    
-                    document.getElementById('successMsg').textContent = '✔ You\'re in! Have a productive day today!';
-                    document.getElementById('successMsg').style.display = 'block';
-                    document.getElementById('errorMsg').style.display = 'none';
-                    
-                    setTimeout(() => {
-                        document.getElementById('successMsg').style.display = 'none';
-                        checkAndLockForm();
-                    }, 5000);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showError('Failed to submit. Please try again.');
-                });
-            }
-            
-            submitBtn.disabled = false;
-            submitText.textContent = '✓ Submit Attendance';
-            submitBtn.style.opacity = '1';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            const payload = {
+
+                cluster: cluster,
+
+                name: name,
+
+                status: status,
+
+                date: now.toLocaleDateString('en-US'),
+
+                time: now.toLocaleTimeString('en-US'),
+
+                latitude: locationData.lat,
+
+                longitude: locationData.lng,
+
+                address: locationData.address,
+
+                notes: notes
+
+            };
+
+
+
+            const formData = new FormData();
+
+            formData.append('data', JSON.stringify(payload));
+
+
+
+            fetch(SUBMIT_URL, {
+
+                method: 'POST',
+
+                body: formData
+
+            })
+
+            .then(response => response.text())
+
+            .then(data => {
+
+                const today = new Date().toLocaleDateString('en-US');
+
+                localStorage.setItem('lastSubmitDate', today);
+
+
+
+                document.getElementById('successMsg').style.display = 'block';
+
+                document.getElementById('errorMsg').style.display = 'none';
+
+
+
+                setTimeout(() => {
+
+                    document.getElementById('successMsg').style.display = 'none';
+
+                    checkAndLockForm();
+
+                }, 8000);
+
+
+
+                submitBtn.disabled = false;
+
+                submitText.textContent = '✓ Submit Attendance';
+
+                submitBtn.style.opacity = '1';
+
+
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            })
+
+            .catch(error => {
+
+                console.error('Error:', error);
+
+                showError('Failed to submit. Please try again.');
+
+                submitBtn.disabled = false;
+
+                submitText.textContent = '✓ Submit Attendance';
+
+                submitBtn.style.opacity = '1';
+
+            });
+
         };
+
     </script>
+
 </body>
+
 </html>
