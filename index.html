@@ -5,119 +5,707 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UBL Attendance Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
     <style>
-        .ubl-gradient {
-            background: linear-gradient(135deg, #054166 0%, #249ACC 100%);
+        :root {
+            --ubl-navy: #054166;
+            --ubl-blue: #249ACC;
+            --ubl-light: #F8FAFB;
+            --ubl-silver: #E8ECEF;
+            --ubl-dark: #012A42;
+            --ubl-accent: #1B7CAB;
         }
-        .ubl-border {
-            border-color: #054166;
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            background: linear-gradient(135deg, #F8FAFB 0%, #E8ECEF 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Decorative background elements */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            right: -20%;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(36, 154, 204, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 0;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -40%;
+            left: -15%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(5, 65, 102, 0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 0;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -30px) scale(1.05); }
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .header-card {
+            background: linear-gradient(135deg, var(--ubl-dark) 0%, var(--ubl-navy) 50%, var(--ubl-accent) 100%);
+            border-radius: 24px 24px 0 0;
+            padding: 3rem 2rem 2.5rem;
+            box-shadow: 
+                0 20px 60px rgba(5, 65, 102, 0.3),
+                0 8px 16px rgba(5, 65, 102, 0.2);
+            position: relative;
+            overflow: hidden;
+            animation: slideInDown 0.6s ease-out;
+        }
+
+        .header-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.1),
+                transparent
+            );
+            animation: shimmer 3s infinite;
+        }
+
+        .header-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .logo-icon {
+            width: 72px;
+            height: 72px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        }
+
+        .logo-icon svg {
+            width: 42px;
+            height: 42px;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+        }
+
+        .header-title {
+            
+text-align: center;
+font-family: 'DM Serif Display', serif;
+            font-size: 2.75rem;
+            font-weight: 400;
+            color: white;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.95rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 500;
+            margin-top: 0.5rem;
+        }
+
+        .main-card {
+            background: white;
+            border-radius: 0 0 24px 24px;
+            padding: 3rem 2.5rem;
+            box-shadow: 
+                0 20px 60px rgba(5, 65, 102, 0.15),
+                0 8px 16px rgba(5, 65, 102, 0.08);
+            position: relative;
+            animation: slideInUp 0.6s ease-out 0.1s both;
+        }
+
+        .message-card {
+            padding: 1.25rem 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            font-weight: 500;
+            text-align: center;
+            letter-spacing: 0.3px;
+            animation: fadeIn 0.4s ease-out;
+            border: 2px solid;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #E8F5F0 0%, #D4EDE3 100%);
+            color: #0D6938;
+            border-color: #34A853;
+            box-shadow: 0 4px 16px rgba(52, 168, 83, 0.15);
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #FEF3F2 0%, #FEE8E6 100%);
+            color: #B71C1C;
+            border-color: #E57373;
+            box-shadow: 0 4px 16px rgba(229, 115, 115, 0.15);
+        }
+
+        .warning-message {
+            background: linear-gradient(135deg, #FFF9E6 0%, #FFF3CC 100%);
+            color: #92400E;
+            border-color: #F59E0B;
+            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.15);
+        }
+
+        .form-section {
+            margin-bottom: 1.75rem;
+            animation: fadeIn 0.5s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .form-section:nth-child(1) { animation-delay: 0.15s; }
+        .form-section:nth-child(2) { animation-delay: 0.2s; }
+        .form-section:nth-child(3) { animation-delay: 0.25s; }
+        .form-section:nth-child(4) { animation-delay: 0.3s; }
+        .form-section:nth-child(5) { animation-delay: 0.35s; }
+        .form-section:nth-child(6) { animation-delay: 0.4s; }
+        .form-section:nth-child(7) { animation-delay: 0.45s; }
+
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--ubl-navy);
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-label .icon {
+            font-size: 1.1rem;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--ubl-silver);
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: 'IBM Plex Sans', sans-serif;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+            color: var(--ubl-dark);
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--ubl-blue);
+            box-shadow: 
+                0 0 0 4px rgba(36, 154, 204, 0.1),
+                0 4px 12px rgba(36, 154, 204, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .form-input:disabled, .form-select:disabled, .form-textarea:disabled {
+            background: #F5F7F9;
+            color: #94A3B8;
+            cursor: not-allowed;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 1.25rem 2rem;
+            background: linear-gradient(135deg, var(--ubl-navy) 0%, var(--ubl-accent) 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 4px 16px rgba(5, 65, 102, 0.25),
+                0 2px 8px rgba(5, 65, 102, 0.15);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 8px 24px rgba(5, 65, 102, 0.35),
+                0 4px 12px rgba(5, 65, 102, 0.2);
+        }
+
+        .btn-primary:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 1.125rem 1.75rem;
+            background: white;
+            color: var(--ubl-navy);
+            border: 2px solid var(--ubl-navy);
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 0.3px;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--ubl-navy);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 
+                0 8px 24px rgba(5, 65, 102, 0.25),
+                0 4px 12px rgba(5, 65, 102, 0.15);
+        }
+
+        .btn-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .location-info {
+            margin-top: 1rem;
+            padding: 1.25rem;
+            background: linear-gradient(135deg, #EBF8FF 0%, #DBEAFE 100%);
+            border: 2px solid #249ACC;
+            border-radius: 12px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .location-info-title {
+            font-weight: 600;
+            color: var(--ubl-navy);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .location-detail {
+            font-size: 0.875rem;
+            color: var(--ubl-dark);
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .location-detail:last-child {
+            margin-bottom: 0;
+        }
+
+        .location-detail strong {
+            font-weight: 600;
+            color: var(--ubl-navy);
+        }
+
+        .leave-dates-section {
+            background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+            border: 2px solid #FBBF24;
+            border-radius: 14px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .leave-dates-title {
+            font-weight: 600;
+            color: #92400E;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .date-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .date-input-wrapper label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #78350F;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .date-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #FCD34D;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-family: 'IBM Plex Sans', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: #F59E0B;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+
+        .leave-hint {
+            font-size: 0.8rem;
+            color: #92400E;
+            margin-top: 0.75rem;
+            font-style: italic;
+        }
+
+        .notice {
+            margin-top: 0.75rem;
+            padding: 0.875rem 1rem;
+            background: linear-gradient(135deg, #FFF4E6 0%, #FFE8CC 100%);
+            border-left: 4px solid #F97316;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: #9A3412;
+            font-weight: 500;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 2.5rem;
+            padding: 2rem 1rem;
+            color: var(--ubl-navy);
+            font-size: 0.875rem;
+            position: relative;
+            z-index: 1;
+            opacity: 0.8;
+        }
+
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--ubl-blue), transparent);
+            border-radius: 2px;
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--ubl-silver), transparent);
+            margin: 2rem 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem 0.75rem;
+            }
+
+            .header-card {
+                padding: 2rem 1.5rem;
+                border-radius: 20px 20px 0 0;
+            }
+
+            .header-title {
+                font-size: 2rem;
+            }
+
+            .main-card {
+                padding: 2rem 1.5rem;
+                border-radius: 0 0 20px 20px;
+            }
+
+            .logo-icon {
+                width: 60px;
+                height: 60px;
+            }
+
+            .logo-icon svg {
+                width: 36px;
+                height: 36px;
+            }
+
+            .date-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading State */
+        .loading {
+            position: relative;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 1rem;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            transform: translateY(-50%);
+        }
+
+        @keyframes spin {
+            to { transform: translateY(-50%) rotate(360deg); }
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen p-4">
-    <div class="max-w-2xl mx-auto">
+<body>
+    <div class="container">
         <!-- Header -->
-        <div class="ubl-gradient rounded-t-2xl shadow-xl p-6 text-white">
-            <div class="flex items-center justify-center gap-3 mb-2">
-                <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-                </svg>
-                <h1 class="text-3xl font-bold">Attendance System</h1>
+        <div class="header-card">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <svg fill="white" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                    </svg>
+                </div>
             </div>
-            <p class="text-center text-blue-100 text-sm">L&D Department</p>
+            <h1 class="header-title">Attendance System</h1>
+            <p class="header-subtitle">Learning & Development</p>
         </div>
         
-        <div class="bg-white rounded-b-2xl shadow-xl p-8">
+        <div class="main-card">
             <!-- Success Message -->
-            <div id="successMsg" style="display: none;" class="mb-6 p-4 bg-blue-100 border-2 border-blue-600 rounded-lg text-blue-800 font-semibold text-center">
-                ✔ You're in! Have a productive day today!
+            <div id="successMsg" style="display: none;" class="message-card success-message">
+                ✓ You're in! Have a productive day today!
             </div>
             
             <!-- Error Message -->
-            <div id="errorMsg" style="display: none;" class="mb-6 p-4 bg-red-100 border-2 border-red-500 rounded-lg text-red-800 font-semibold text-center">
-                ❌ <span id="errorText">Error occurred</span>
+            <div id="errorMsg" style="display: none;" class="message-card error-message">
+                <span id="errorText">Error occurred</span>
             </div>
             
-            <div class="space-y-5">
-                <!-- Cluster Selection -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">🏢 Select Cluster *</label>
-                    <select id="cluster" class="w-full px-4 py-3 border-2 ubl-border rounded-lg text-lg focus:ring-2 focus:ring-blue-600">
-                        <option value="">-- Select Cluster --</option>
-                        <option value="South">South</option>
-                        <option value="Central">Central</option>
-                        <option value="North">North</option>
-                    </select>
-                </div>
-
-                <!-- Employee Name -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">👤 Employee Name *</label>
-                    <select id="employeeName" class="w-full px-4 py-3 border-2 ubl-border rounded-lg text-lg focus:ring-2 focus:ring-blue-600" disabled>
-                        <option value="">-- Select Cluster First --</option>
-                    </select>
-                </div>
-
-                <!-- Status -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">📊 Attendance Status *</label>
-                    <select id="status" class="w-full px-4 py-3 border-2 ubl-border rounded-lg text-lg focus:ring-2 focus:ring-blue-600">
-                        <option value="">-- Select Status --</option>
-                        <option value="Present" id="presentOption">Present</option>
-                        <option value="Late">Late</option>
-                        <option value="Personal/Sick Leave">Personal/Sick Leave</option>
-                        <option value="Annual Leave">Annual Leave</option>
-                    </select>
-                    <p id="lateNotice" style="display: none;" class="mt-2 text-sm text-orange-600 font-semibold">⏰ It's past 9:02 AM - "Present" option is no longer available.</p>
-                </div>
-
-                <!-- Leave Dates (only show for leaves) -->
-                <div id="leaveDatesSection" style="display: none;">
-                    <div class="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 mb-3">
-                        <p class="text-sm text-yellow-800 font-semibold mb-3">📅 Select Leave Duration</p>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Start Date *</label>
-                                <input type="date" id="leaveStartDate" class="w-full px-3 py-2 border-2 border-yellow-400 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">End Date *</label>
-                                <input type="date" id="leaveEndDate" class="w-full px-3 py-2 border-2 border-yellow-400 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500">
-                            </div>
-                        </div>
-                        <p class="text-xs text-yellow-700 mt-2" id="leaveHint">Leave will be marked for all dates in this range</p>
-                    </div>
-                </div>
-
-                <!-- Location -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">📍 Location *</label>
-                    <button id="locationBtn" type="button" class="w-full ubl-gradient text-white px-6 py-4 rounded-lg text-lg font-bold hover:opacity-90 transition">
-                        <span id="locationBtnText">Click to Get Location</span>
-                    </button>
-                    <div id="locationInfo" style="display: none;" class="mt-3 p-4 bg-blue-50 border-2 border-blue-300 rounded-lg">
-                        <p class="text-sm font-semibold text-blue-800">✅ Location Captured!</p>
-                        <p class="text-sm mt-1"><strong>Coordinates:</strong> <span id="coords"></span></p>
-                        <p class="text-sm"><strong>Address:</strong> <span id="addr"></span></p>
-                    </div>
-                </div>
-
-                <!-- Notes -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">📝 Notes (Optional)</label>
-                    <textarea id="notes" class="w-full px-4 py-3 border-2 ubl-border rounded-lg focus:ring-2 focus:ring-blue-600" rows="3" placeholder="Any additional comments..."></textarea>
-                </div>
-
-                <!-- Submit Button -->
-                <button id="submitBtn" class="w-full ubl-gradient text-white px-6 py-5 rounded-lg text-xl font-bold hover:opacity-90 transition mt-4">
-                    <span id="submitText">✓ Submit Attendance</span>
-                </button>
+            <!-- Cluster Selection -->
+            <div class="form-section">
+                <label class="form-label">
+                    <span class="icon">🏢</span>
+                    <span>Select Cluster</span>
+                </label>
+                <select id="cluster" class="form-select">
+                    <option value="">-- Select Cluster --</option>
+                    <option value="South">South</option>
+                    <option value="Central">Central</option>
+                    <option value="North">North</option>
+                </select>
             </div>
+
+            <!-- Employee Name -->
+            <div class="form-section">
+                <label class="form-label">
+                    <span class="icon">👤</span>
+                    <span>Employee Name</span>
+                </label>
+                <select id="employeeName" class="form-select" disabled>
+                    <option value="">-- Select Cluster First --</option>
+                </select>
+            </div>
+
+            <!-- Status -->
+            <div class="form-section">
+                <label class="form-label">
+                    <span class="icon">📊</span>
+                    <span>Attendance Status</span>
+                </label>
+                <select id="status" class="form-select">
+                    <option value="">-- Select Status --</option>
+                    <option value="Present" id="presentOption">Present</option>
+                    <option value="Late">Late</option>
+                    <option value="Personal/Sick Leave">Personal/Sick Leave</option>
+                    <option value="Annual Leave">Annual Leave</option>
+                </select>
+                <div id="lateNotice" style="display: none;" class="notice">
+                    ⏰ It's past 9:02 AM - "Present" option is no longer available.
+                </div>
+            </div>
+
+            <!-- Leave Dates -->
+            <div id="leaveDatesSection" style="display: none;" class="form-section">
+                <div class="leave-dates-section">
+                    <p class="leave-dates-title">
+                        <span>📅</span>
+                        <span>Select Leave Duration</span>
+                    </p>
+                    <div class="date-grid">
+                        <div class="date-input-wrapper">
+                            <label>Start Date</label>
+                            <input type="date" id="leaveStartDate" class="date-input">
+                        </div>
+                        <div class="date-input-wrapper">
+                            <label>End Date</label>
+                            <input type="date" id="leaveEndDate" class="date-input">
+                        </div>
+                    </div>
+                    <p class="leave-hint" id="leaveHint">Leave will be marked for all dates in this range</p>
+                </div>
+            </div>
+
+            <!-- Location -->
+            <div class="form-section">
+                <label class="form-label">
+                    <span class="icon">📍</span>
+                    <span>Location</span>
+                </label>
+                <button id="locationBtn" type="button" class="btn-secondary">
+                    <span id="locationBtnText">Click to Get Location</span>
+                </button>
+                <div id="locationInfo" style="display: none;" class="location-info">
+                    <p class="location-info-title">
+                        <span>✓</span>
+                        <span>Location Captured</span>
+                    </p>
+                    <p class="location-detail"><strong>Coordinates:</strong> <span id="coords"></span></p>
+                    <p class="location-detail"><strong>Address:</strong> <span id="addr"></span></p>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="form-section">
+                <label class="form-label">
+                    <span class="icon">📝</span>
+                    <span>Notes (Optional)</span>
+                </label>
+                <textarea id="notes" class="form-textarea" placeholder="Any additional comments..."></textarea>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Submit Button -->
+            <button id="submitBtn" class="btn-primary">
+                <span id="submitText">✓ Submit Attendance</span>
+            </button>
         </div>
         
         <!-- Footer -->
-        <div class="text-center mt-4 text-gray-600 text-sm">
-            <p>© United Bank Limited - Attendance Management System</p>
+        <div class="footer">
+            <p>© 2024 United Bank Limited</p>
+            <p style="margin-top: 0.25rem; opacity: 0.7;">Attendance Management System</p>
         </div>
     </div>
 
@@ -126,6 +714,7 @@
         const CHECK_URL = 'https://script.google.com/macros/s/AKfycbxcHlexL5KZH5SR9OdByejARxIXL1laADLHLiUwxiIgcXk7D7OGBWRpoLYJfmnP4Iod/exec';
         
         let locationData = null;
+        let isSubmitting = false;
 
         function hasSubmittedToday() {
             const lastSubmit = localStorage.getItem('lastSubmitDate');
@@ -144,11 +733,9 @@
                 
                 const errorMsg = document.getElementById('errorMsg');
                 const errorText = document.getElementById('errorText');
-                errorText.textContent = '🔒 Attendance already submitted from this device today. Please use a different device or try again tomorrow.';
+                errorText.innerHTML = '🔒 Attendance already submitted from this device today.<br>Please use a different device or try again tomorrow.';
                 errorMsg.style.display = 'block';
-                errorMsg.style.backgroundColor = '#FEF3C7';
-                errorMsg.style.borderColor = '#F59E0B';
-                errorMsg.querySelector('span').style.color = '#92400E';
+                errorMsg.className = 'message-card warning-message';
                 
                 return true;
             }
@@ -187,10 +774,7 @@
             checkAndLockForm();
             checkTimeForPresent();
             
-            // Set min date for leave dates
             const today = new Date().toISOString().split('T')[0];
-            
-            // For Personal/Sick Leave: start from today
             document.getElementById('leaveStartDate').setAttribute('min', today);
             document.getElementById('leaveEndDate').setAttribute('min', today);
         };
@@ -215,23 +799,23 @@
         }
 
         function showError(msg) {
-            document.getElementById('errorText').textContent = msg;
+            document.getElementById('errorText').innerHTML = msg;
+            document.getElementById('errorMsg').className = 'message-card error-message';
             document.getElementById('errorMsg').style.display = 'block';
             document.getElementById('successMsg').style.display = 'none';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             setTimeout(() => {
                 document.getElementById('errorMsg').style.display = 'none';
             }, 5000);
         }
 
-        function showSuccess() {
+        function showSuccess(message) {
+            document.getElementById('successMsg').textContent = message;
             document.getElementById('successMsg').style.display = 'block';
             document.getElementById('errorMsg').style.display = 'none';
-            setTimeout(() => {
-                document.getElementById('successMsg').style.display = 'none';
-            }, 5000);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Show/hide leave dates based on status selection
         document.getElementById('status').addEventListener('change', function() {
             const status = this.value;
             const leaveDatesSection = document.getElementById('leaveDatesSection');
@@ -241,18 +825,15 @@
             if (status === 'Personal/Sick Leave' || status === 'Annual Leave') {
                 leaveDatesSection.style.display = 'block';
                 
-                // Set date constraints based on leave type
                 const today = new Date();
                 
                 if (status === 'Annual Leave') {
-                    // Annual Leave: can mark 2 days back
                     const twoDaysAgo = new Date(today);
                     twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
                     const minDate = twoDaysAgo.toISOString().split('T')[0];
                     leaveStartDate.setAttribute('min', minDate);
                     leaveHint.textContent = 'You can mark Annual Leave starting from 2 days ago';
                 } else {
-                    // Personal/Sick Leave: only from today
                     const todayStr = today.toISOString().split('T')[0];
                     leaveStartDate.setAttribute('min', todayStr);
                     leaveHint.textContent = 'Leave will be marked for all dates in this range';
@@ -262,7 +843,6 @@
             }
         });
 
-        // Update end date minimum when start date changes
         document.getElementById('leaveStartDate').addEventListener('change', function() {
             document.getElementById('leaveEndDate').setAttribute('min', this.value);
         });
@@ -298,7 +878,7 @@
                     });
                     
                     if (employeeSelect.options.length === 1) {
-                        employeeSelect.innerHTML = '<option value="">✅ All employees have submitted today</option>';
+                        employeeSelect.innerHTML = '<option value="">✓ All employees have submitted today</option>';
                     }
                 } catch (error) {
                     console.error('Error fetching submitted names:', error);
@@ -323,13 +903,13 @@
             
             btnText.textContent = '⏳ Getting location...';
             btn.disabled = true;
-            btn.style.opacity = '0.6';
+            btn.classList.add('loading');
             
             if (!navigator.geolocation) {
                 showError('Your browser does not support location services');
                 btnText.textContent = 'Click to Get Location';
                 btn.disabled = false;
-                btn.style.opacity = '1';
+                btn.classList.remove('loading');
                 return;
             }
             
@@ -357,20 +937,19 @@
                     }
                     
                     document.getElementById('locationInfo').style.display = 'block';
-                    btnText.textContent = '✅ Location Captured';
+                    btnText.textContent = '✓ Location Captured';
                     btn.disabled = false;
-                    btn.style.opacity = '1';
+                    btn.classList.remove('loading');
                 },
                 function(error) {
                     showError('Could not get location. Please enable location permissions.');
                     btnText.textContent = 'Click to Get Location';
                     btn.disabled = false;
-                    btn.style.opacity = '1';
+                    btn.classList.remove('loading');
                 }
             );
         };
 
-        // Generate dates between start and end
         function getDatesBetween(startDate, endDate) {
             const dates = [];
             const current = new Date(startDate);
@@ -385,6 +964,10 @@
         }
 
         document.getElementById('submitBtn').onclick = async function() {
+            if (isSubmitting) {
+                return;
+            }
+
             const cluster = document.getElementById('cluster').value;
             const name = document.getElementById('employeeName').value;
             const status = document.getElementById('status').value;
@@ -405,7 +988,6 @@
                 return;
             }
             
-            // Check if leave dates are required
             let leaveDates = [];
             if (status === 'Personal/Sick Leave' || status === 'Annual Leave') {
                 const startDate = document.getElementById('leaveStartDate').value;
@@ -429,15 +1011,15 @@
                 return;
             }
             
+            isSubmitting = true;
             submitBtn.disabled = true;
             submitText.textContent = '⏳ Submitting...';
-            submitBtn.style.opacity = '0.6';
+            submitBtn.classList.add('loading');
             
             const now = new Date();
             
-            // If it's a leave, submit multiple entries (one for each day)
-            if (leaveDates.length > 0) {
-                try {
+            try {
+                if (leaveDates.length > 0) {
                     for (const leaveDate of leaveDates) {
                         const payload = {
                             cluster: cluster,
@@ -463,64 +1045,55 @@
                     const today = new Date().toLocaleDateString('en-US');
                     localStorage.setItem('lastSubmitDate', today);
                     
-                    document.getElementById('successMsg').textContent = '✔ Leave submitted for ' + leaveDates.length + ' day(s)!';
-                    document.getElementById('successMsg').style.display = 'block';
-                    document.getElementById('errorMsg').style.display = 'none';
+                    showSuccess('✓ Leave submitted for ' + leaveDates.length + ' day(s)!');
                     
                     setTimeout(() => {
                         document.getElementById('successMsg').style.display = 'none';
                         checkAndLockForm();
                     }, 5000);
                     
-                } catch (error) {
-                    console.error('Error:', error);
-                    showError('Failed to submit leave. Please try again.');
-                }
-            } else {
-                // Regular attendance (Present/Late)
-                const payload = {
-                    cluster: cluster,
-                    name: name,
-                    status: status,
-                    date: now.toLocaleDateString('en-US'),
-                    time: now.toLocaleTimeString('en-US'),
-                    latitude: locationData.lat,
-                    longitude: locationData.lng,
-                    address: locationData.address,
-                    notes: notes
-                };
-                
-                const formData = new FormData();
-                formData.append('data', JSON.stringify(payload));
-                
-                fetch(SUBMIT_URL, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.text())
-                .then(data => {
+                } else {
+                    const payload = {
+                        cluster: cluster,
+                        name: name,
+                        status: status,
+                        date: now.toLocaleDateString('en-US'),
+                        time: now.toLocaleTimeString('en-US'),
+                        latitude: locationData.lat,
+                        longitude: locationData.lng,
+                        address: locationData.address,
+                        notes: notes
+                    };
+                    
+                    const formData = new FormData();
+                    formData.append('data', JSON.stringify(payload));
+                    
+                    const response = await fetch(SUBMIT_URL, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    await response.text();
+                    
                     const today = new Date().toLocaleDateString('en-US');
                     localStorage.setItem('lastSubmitDate', today);
                     
-                    document.getElementById('successMsg').textContent = '✔ You\'re in! Have a productive day today!';
-                    document.getElementById('successMsg').style.display = 'block';
-                    document.getElementById('errorMsg').style.display = 'none';
+                    showSuccess('✓ You\'re in! Have a productive day today!');
                     
                     setTimeout(() => {
                         document.getElementById('successMsg').style.display = 'none';
                         checkAndLockForm();
                     }, 5000);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showError('Failed to submit. Please try again.');
-                });
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to submit. Please try again.');
+                isSubmitting = false;
+                submitBtn.disabled = false;
+                submitText.textContent = '✓ Submit Attendance';
+                submitBtn.classList.remove('loading');
             }
-            
-            submitBtn.disabled = false;
-            submitText.textContent = '✓ Submit Attendance';
-            submitBtn.style.opacity = '1';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         };
     </script>
 </body>
