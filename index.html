@@ -858,7 +858,7 @@
                     <option value="Annual Leave">Annual Leave</option>
                 </select>
                 <div id="lateNotice" style="display: none;" class="notice">
-                    ⏰ It's past 9:02 AM - "Present" option is no longer available.
+                    ⏰ It's past 9:00 AM - "Present" option is no longer available.
                 </div>
             </div>
 
@@ -884,7 +884,7 @@
             </div>
 
             <!-- Location -->
-            <div class="form-section">
+            <div class="form-section" id="locationSection">
                 <label class="form-label">
                     <span class="icon">📍</span>
                     <span>Location</span>
@@ -921,7 +921,7 @@
         
         <!-- Footer -->
         <div class="footer">
-            <p>© 2026 LS Engineering</p>
+            <p>© 2026 United Bank Limited</p>
             <p>Attendance Management System</p>
         </div>
     </div>
@@ -932,6 +932,7 @@
         
         let locationData = null;
         let isSubmitting = false;
+        let isLeaveSelected = false;
 
         function hasSubmittedToday() {
             const lastSubmit = localStorage.getItem('lastSubmitDate');
@@ -1036,25 +1037,32 @@
             const leaveDatesSection = document.getElementById('leaveDatesSection');
             const leaveStartDate = document.getElementById('leaveStartDate');
             const leaveHint = document.getElementById('leaveHint');
+            const locationSection = document.getElementById('locationSection');
             
             if (status === 'Personal/Sick Leave' || status === 'Annual Leave') {
+                isLeaveSelected = true;
                 leaveDatesSection.style.display = 'block';
+                locationSection.style.display = 'none'; // Hide location for leaves
                 
                 const today = new Date();
+                // Both leave types can be marked 2 days back
+                const twoDaysAgo = new Date(today);
+                twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+                const minDate = twoDaysAgo.toISOString().split('T')[0];
+                leaveStartDate.setAttribute('min', minDate);
+                leaveHint.textContent = 'You can mark leave starting from 2 days ago';
                 
-                if (status === 'Annual Leave') {
-                    const twoDaysAgo = new Date(today);
-                    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-                    const minDate = twoDaysAgo.toISOString().split('T')[0];
-                    leaveStartDate.setAttribute('min', minDate);
-                    leaveHint.textContent = 'You can mark Annual Leave starting from 2 days ago';
-                } else {
-                    const todayStr = today.toISOString().split('T')[0];
-                    leaveStartDate.setAttribute('min', todayStr);
-                    leaveHint.textContent = 'Leave will be marked for all dates in this range';
-                }
+                // Set default N/A location for leaves
+                locationData = {
+                    lat: 0,
+                    lng: 0,
+                    address: 'N/A'
+                };
             } else {
+                isLeaveSelected = false;
                 leaveDatesSection.style.display = 'none';
+                locationSection.style.display = 'block'; // Show location for Present/Late
+                locationData = null; // Reset location
             }
         });
 
@@ -1221,7 +1229,7 @@
                 leaveDates = getDatesBetween(startDate, endDate);
             }
             
-            if (!locationData) {
+            if (!locationData && !isLeaveSelected) {
                 showError('Please capture your location first');
                 return;
             }
@@ -1241,7 +1249,7 @@
                             name: name,
                             status: status,
                             date: leaveDate,
-                            time: now.toLocaleTimeString('en-US'),
+                            time: '6:00:00 PM', // Fixed time for leaves
                             latitude: locationData.lat,
                             longitude: locationData.lng,
                             address: locationData.address,
