@@ -858,7 +858,7 @@
                     <option value="Annual Leave">Annual Leave</option>
                 </select>
                 <div id="lateNotice" style="display: none;" class="notice">
-                    ⏰ It's past 9:00 AM - "Present" option is no longer available.
+                    ⏰ It's past 9:02 AM - "Present" option is no longer available.
                 </div>
             </div>
 
@@ -930,9 +930,63 @@
         const SUBMIT_URL = 'https://script.google.com/macros/s/AKfycbw4blMS4G_mIhNLi2o_TUDo6dWwqaJ2c-Cb6BXiWzLu_0Mm-VLdiHv7QnsRjOsunDWc/exec';
         const CHECK_URL = 'https://script.google.com/macros/s/AKfycbxcHlexL5KZH5SR9OdByejARxIXL1laADLHLiUwxiIgcXk7D7OGBWRpoLYJfmnP4Iod/exec';
         
+        // Office coordinates for each cluster (with 500m radius tolerance)
+        const OFFICE_COORDINATES = {
+            'South': { lat: 24.8843, lng: 67.08962, name: 'South L&D Center' },
+            'Central': { lat: 31.5344, lng: 74.3427, name: 'Central L&D Center' },
+            'North': { lat: 33.7261, lng: 73.03982, name: 'North L&D Center' }
+        };
+        const OFFICE_RADIUS_KM = 0.5; // 500 meters tolerance
+        
         let locationData = null;
         let isSubmitting = false;
         let isLeaveSelected = false;
+        let isOutsideOffice = false;
+
+        // Calculate distance between two coordinates using Haversine formula
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth's radius in kilometers
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                     Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // Check if location is within office radius
+        function isLocationNearOffice(cluster, lat, lng) {
+            if (!OFFICE_COORDINATES[cluster]) return false;
+            
+            const office = OFFICE_COORDINATES[cluster];
+            const distance = calculateDistance(lat, lng, office.lat, office.lng);
+            
+            return distance <= OFFICE_RADIUS_KM;
+        }
+
+        // Determine actual status based on time (even if user selected "Present")
+        function getActualStatus(selectedStatus) {
+            if (selectedStatus !== 'Present') {
+                return selectedStatus; // Keep Late, Annual Leave, Personal/Sick Leave as is
+            }
+            
+            // Check current time in Pakistan timezone
+            const now = new Date();
+            const pakistanTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' }));
+            const hours = pakistanTime.getHours();
+            const minutes = pakistanTime.getMinutes();
+            
+            const currentTotalMinutes = (hours * 60) + minutes;
+            const cutoffTotalMinutes = (9 * 60) + 2; // 9:02 AM
+            
+            // If submitted after 9:02 AM, mark as Late even if they selected Present
+            if (currentTotalMinutes >= cutoffTotalMinutes) {
+                return 'Late';
+            }
+            
+            return 'Present';
+        }
 
         function hasSubmittedToday() {
             const lastSubmit = localStorage.getItem('lastSubmitDate');
@@ -964,6 +1018,7 @@
             'South': [
                 'Abdus Samad',
                 'Aliza Khan',
+                'Farrukh Ali Khan',
                 'Fouzia Aslam',
                 'Jason Michael Clive Dsouza',
                 'Nabeel ur Rehman',
@@ -971,12 +1026,12 @@
                 'Syeda Kanwal Sultana'
             ],
             'Central': [
-                'Farrukh Ali Khan',
                 'Javed Hussain',
                 'Khadija Adil',
                 'Khawaja Fahad Tabish',
                 'Nadia Batool',
                 'Radiya Faysal',
+                'Rizwan Hameed',
                 'Sauood Sadiq'
             ],
             'North': [
@@ -1123,6 +1178,12 @@
         document.getElementById('locationBtn').onclick = function() {
             const btn = this;
             const btnText = document.getElementById('locationBtnText');
+            const cluster = document.getElementById('cluster').value;
+            
+            if (!cluster) {
+                showError('Please select your cluster first');
+                return;
+            }
             
             btnText.textContent = '⏳ Getting location...';
             btn.disabled = true;
@@ -1159,8 +1220,41 @@
                         document.getElementById('addr').textContent = locationData.address;
                     }
                     
-                    document.getElementById('locationInfo').style.display = 'block';
-                    btnText.textContent = '✓ Location Captured';
+                    // Check if location is near office
+                    const nearOffice = isLocationNearOffice(cluster, locationData.lat, locationData.lng);
+                    const locationInfoDiv = document.getElementById('locationInfo');
+                    
+                    if (nearOffice) {
+                        isOutsideOffice = false;
+                        locationInfoDiv.style.background = 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)';
+                        locationInfoDiv.style.borderColor = '#34D399';
+                        document.querySelector('.location-info-title').innerHTML = '<span>✓</span><span>Location Verified - At ' + OFFICE_COORDINATES[cluster].name + '</span>';
+                        document.querySelector('.location-info-title').style.color = '#065F46';
+                    } else {
+                        isOutsideOffice = true;
+                        locationInfoDiv.style.background = 'linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)';
+                        locationInfoDiv.style.borderColor = '#F97316';
+                        const distance = calculateDistance(
+                            locationData.lat, 
+                            locationData.lng, 
+                            OFFICE_COORDINATES[cluster].lat, 
+                            OFFICE_COORDINATES[cluster].lng
+                        );
+                        document.querySelector('.location-info-title').innerHTML = 
+                            '<span>⚠️</span><span>Warning: You are ' + distance.toFixed(2) + ' km away from ' + OFFICE_COORDINATES[cluster].name + '</span>';
+                        document.querySelector('.location-info-title').style.color = '#9A3412';
+                        
+                        // Show additional message
+                        const warningMsg = document.createElement('p');
+                        warningMsg.className = 'location-detail';
+                        warningMsg.style.color = '#9A3412';
+                        warningMsg.style.fontWeight = '600';
+                        warningMsg.innerHTML = '⚠️ You can still submit, but please confirm this is your actual location.';
+                        locationInfoDiv.appendChild(warningMsg);
+                    }
+                    
+                    locationInfoDiv.style.display = 'block';
+                    btnText.textContent = nearOffice ? '✓ Location Verified' : '⚠️ Location Captured';
                     btn.disabled = false;
                     btn.classList.remove('loading');
                 },
@@ -1169,6 +1263,11 @@
                     btnText.textContent = 'Click to Get Location';
                     btn.disabled = false;
                     btn.classList.remove('loading');
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
                 }
             );
         };
@@ -1193,7 +1292,7 @@
 
             const cluster = document.getElementById('cluster').value;
             const name = document.getElementById('employeeName').value;
-            const status = document.getElementById('status').value;
+            const selectedStatus = document.getElementById('status').value;
             const notes = document.getElementById('notes').value;
             const submitBtn = this;
             const submitText = document.getElementById('submitText');
@@ -1206,13 +1305,13 @@
                 showError('Please select your name');
                 return;
             }
-            if (!status) {
+            if (!selectedStatus) {
                 showError('Please select status');
                 return;
             }
             
             let leaveDates = [];
-            if (status === 'Personal/Sick Leave' || status === 'Annual Leave') {
+            if (selectedStatus === 'Personal/Sick Leave' || selectedStatus === 'Annual Leave') {
                 const startDate = document.getElementById('leaveStartDate').value;
                 const endDate = document.getElementById('leaveEndDate').value;
                 
@@ -1234,6 +1333,33 @@
                 return;
             }
             
+            // Show confirmation if marking from outside office
+            if (isOutsideOffice && !isLeaveSelected) {
+                const confirmSubmit = confirm(
+                    'You are marking attendance from outside the L&D Center.\n\n' +
+                    'Are you sure you want to submit from this location?'
+                );
+                
+                if (!confirmSubmit) {
+                    return;
+                }
+            }
+            
+            // Get actual status (may override "Present" to "Late" based on time)
+            const actualStatus = getActualStatus(selectedStatus);
+            
+            // Show notification if status was changed from Present to Late
+            if (selectedStatus === 'Present' && actualStatus === 'Late') {
+                const proceedLate = confirm(
+                    'It is past 9:02 AM. Your attendance will be marked as "Late" instead of "Present".\n\n' +
+                    'Do you want to proceed?'
+                );
+                
+                if (!proceedLate) {
+                    return;
+                }
+            }
+            
             isSubmitting = true;
             submitBtn.disabled = true;
             submitText.textContent = '⏳ Submitting...';
@@ -1247,7 +1373,7 @@
                         const payload = {
                             cluster: cluster,
                             name: name,
-                            status: status,
+                            status: actualStatus, // Use actual status
                             date: leaveDate,
                             time: '6:00:00 PM', // Fixed time for leaves
                             latitude: locationData.lat,
@@ -1279,13 +1405,13 @@
                     const payload = {
                         cluster: cluster,
                         name: name,
-                        status: status,
+                        status: actualStatus, // Use actual status (may be Late even if Present was selected)
                         date: now.toLocaleDateString('en-US'),
                         time: now.toLocaleTimeString('en-US'),
                         latitude: locationData.lat,
                         longitude: locationData.lng,
                         address: locationData.address,
-                        notes: notes
+                        notes: notes + (isOutsideOffice ? ' [Marked from outside office]' : '')
                     };
                     
                     const formData = new FormData();
@@ -1301,7 +1427,8 @@
                     const today = new Date().toLocaleDateString('en-US');
                     localStorage.setItem('lastSubmitDate', today);
                     
-                    showSuccess('✓ You\'re in! Have a productive day today!');
+                    const statusText = actualStatus === 'Late' ? 'marked as Late' : 'in';
+                    showSuccess('✓ You\'re ' + statusText + '! Have a productive day today!');
                     
                     setTimeout(() => {
                         document.getElementById('successMsg').style.display = 'none';
