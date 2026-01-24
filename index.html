@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UBL L&D Attendance System 2.0</title>
+    <title>UBL Attendance Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --ubl-navy: #054166;
@@ -14,6 +14,9 @@
             --ubl-silver: #E8ECEF;
             --ubl-dark: #012A42;
             --ubl-accent: #1B7CAB;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #EF4444;
         }
 
         * {
@@ -23,14 +26,14 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: #0A1628;
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #0A1628 0%, #1a2942 100%);
             min-height: 100vh;
             position: relative;
             overflow-x: hidden;
         }
 
-        /* Animated Background */
+        /* Animated mesh gradient background */
         body::before {
             content: '';
             position: fixed;
@@ -39,43 +42,118 @@
             right: 0;
             bottom: 0;
             background: 
-                radial-gradient(circle at 20% 30%, rgba(36, 154, 204, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(5, 65, 102, 0.2) 0%, transparent 50%),
-                radial-gradient(circle at 50% 50%, rgba(27, 124, 171, 0.1) 0%, transparent 70%);
+                radial-gradient(ellipse at 20% 30%, rgba(36, 154, 204, 0.2) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(5, 65, 102, 0.25) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(27, 124, 171, 0.15) 0%, transparent 70%),
+                radial-gradient(circle at 90% 10%, rgba(36, 154, 204, 0.1) 0%, transparent 40%);
             z-index: 0;
-            animation: backgroundPulse 15s ease-in-out infinite;
+            animation: meshMove 20s ease-in-out infinite;
         }
 
-        @keyframes backgroundPulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
+        @keyframes meshMove {
+            0%, 100% { 
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+            50% { 
+                transform: scale(1.1) rotate(2deg);
+                opacity: 0.9;
+            }
         }
 
-        /* Floating Particles */
-        .particle {
+        /* Floating orbs */
+        .orb {
             position: fixed;
-            background: rgba(36, 154, 204, 0.3);
             border-radius: 50%;
             pointer-events: none;
             z-index: 0;
-            animation: float-particle linear infinite;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: orbFloat linear infinite;
         }
 
-        @keyframes float-particle {
-            0% {
-                transform: translateY(100vh) translateX(0) scale(0);
-                opacity: 0;
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(36, 154, 204, 0.4), transparent);
+            top: -200px;
+            right: -200px;
+            animation-duration: 25s;
+        }
+
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(27, 124, 171, 0.3), transparent);
+            bottom: -150px;
+            left: -150px;
+            animation-duration: 30s;
+            animation-delay: -10s;
+        }
+
+        .orb-3 {
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(5, 65, 102, 0.3), transparent);
+            top: 50%;
+            left: 50%;
+            animation-duration: 35s;
+            animation-delay: -20s;
+        }
+
+        @keyframes orbFloat {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
             }
-            10% {
-                opacity: 1;
+            33% {
+                transform: translate(50px, -50px) scale(1.1);
             }
-            90% {
-                opacity: 1;
+            66% {
+                transform: translate(-50px, 50px) scale(0.9);
             }
-            100% {
-                transform: translateY(-100vh) translateX(100px) scale(1);
-                opacity: 0;
-            }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        /* Progress indicator */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--ubl-blue), var(--ubl-accent), #10B981);
+            width: 0%;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 20px rgba(36, 154, 204, 0.6);
+        }
+
+        .header-card {
+            background: linear-gradient(135deg, rgba(1, 42, 66, 0.95) 0%, rgba(5, 65, 102, 0.95) 50%, rgba(27, 124, 171, 0.95) 100%);
+            border-radius: 32px;
+            padding: 3rem 2rem;
+            box-shadow: 
+                0 30px 90px rgba(0, 0, 0, 0.5),
+                0 10px 30px rgba(36, 154, 204, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 2rem;
+            animation: slideInDown 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         @keyframes slideInDown {
@@ -89,6 +167,137 @@
             }
         }
 
+        /* Animated gradient border */
+        .header-card::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 32px;
+            padding: 2px;
+            background: linear-gradient(45deg, 
+                transparent, 
+                rgba(36, 154, 204, 0.5), 
+                transparent, 
+                rgba(16, 185, 129, 0.3),
+                transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            animation: borderRotate 4s linear infinite;
+        }
+
+        @keyframes borderRotate {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            position: relative;
+        }
+
+        .logo-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.3),
+                0 8px 32px rgba(36, 154, 204, 0.5),
+                inset 0 2px 4px rgba(255, 255, 255, 0.2);
+            position: relative;
+            animation: logoFloat 3s ease-in-out infinite;
+            transition: transform 0.3s ease;
+        }
+
+        .logo-icon:hover {
+            transform: scale(1.05) rotate(5deg);
+        }
+
+        @keyframes logoFloat {
+            0%, 100% { 
+                transform: translateY(0px);
+                box-shadow: 
+                    0 20px 60px rgba(0, 0, 0, 0.3),
+                    0 8px 32px rgba(36, 154, 204, 0.5),
+                    inset 0 2px 4px rgba(255, 255, 255, 0.2);
+            }
+            50% { 
+                transform: translateY(-10px);
+                box-shadow: 
+                    0 30px 70px rgba(0, 0, 0, 0.4),
+                    0 12px 40px rgba(36, 154, 204, 0.6),
+                    inset 0 2px 4px rgba(255, 255, 255, 0.2);
+            }
+        }
+
+        .logo-icon svg {
+            width: 64px;
+            height: 64px;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+        }
+
+        .header-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: white;
+            text-align: center;
+            letter-spacing: -0.5px;
+            text-shadow: 
+                0 2px 10px rgba(0, 0, 0, 0.3),
+                0 0 40px rgba(36, 154, 204, 0.5);
+            line-height: 1.1;
+            animation: titleGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes titleGlow {
+            0%, 100% {
+                text-shadow: 
+                    0 2px 10px rgba(0, 0, 0, 0.3),
+                    0 0 40px rgba(36, 154, 204, 0.5);
+            }
+            50% {
+                text-shadow: 
+                    0 2px 10px rgba(0, 0, 0, 0.3),
+                    0 0 60px rgba(36, 154, 204, 0.7),
+                    0 0 80px rgba(16, 185, 129, 0.3);
+            }
+        }
+
+        .header-subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.9375rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-top: 1rem;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 32px;
+            padding: 3rem;
+            box-shadow: 
+                0 30px 90px rgba(0, 0, 0, 0.3),
+                0 10px 30px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            position: relative;
+            animation: slideInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+            border: 1px solid rgba(36, 154, 204, 0.1);
+        }
+
         @keyframes slideInUp {
             from {
                 opacity: 0;
@@ -100,311 +309,35 @@
             }
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes shimmer {
-            0% { background-position: -1000px 0; }
-            100% { background-position: 1000px 0; }
-        }
-
-        @keyframes glow {
-            0%, 100% { 
-                box-shadow: 
-                    0 0 20px rgba(36, 154, 204, 0.5),
-                    0 0 40px rgba(36, 154, 204, 0.3),
-                    0 0 60px rgba(36, 154, 204, 0.2);
-            }
-            50% { 
-                box-shadow: 
-                    0 0 30px rgba(36, 154, 204, 0.6),
-                    0 0 60px rgba(36, 154, 204, 0.4),
-                    0 0 90px rgba(36, 154, 204, 0.3);
-            }
-        }
-
-        .container {
-            position: relative;
-            z-index: 1;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
-        }
-
-        .header-card {
-            background: linear-gradient(135deg, #012A42 0%, #054166 50%, #1B7CAB 100%);
-            border-radius: 32px 32px 0 0;
-            padding: 4rem 2rem 3rem;
-            box-shadow: 
-                0 30px 90px rgba(0, 0, 0, 0.5),
-                0 10px 30px rgba(36, 154, 204, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            position: relative;
-            overflow: hidden;
-            animation: slideInDown 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        /* Decorative Elements */
-        .header-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -50%;
-            width: 200%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.05),
-                transparent
-            );
-            animation: shimmer 4s infinite;
-        }
-
-        .header-card::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(36, 154, 204, 0.8),
-                transparent
-            );
-        }
-
-        /* Geometric Decorations */
-        .decoration-circle {
-            position: absolute;
-            border-radius: 50%;
-            border: 2px solid rgba(36, 154, 204, 0.2);
-        }
-
-        .decoration-circle-1 {
-            width: 300px;
-            height: 300px;
-            top: -100px;
-            right: -100px;
-            animation: rotate 30s linear infinite;
-        }
-
-        .decoration-circle-2 {
-            width: 200px;
-            height: 200px;
-            bottom: -50px;
-            left: -50px;
-            animation: rotate 20s linear infinite reverse;
-        }
-
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .logo-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-            position: relative;
-        }
-
-        .logo-icon {
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
-            border-radius: 26px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(20px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 
-                0 20px 60px rgba(0, 0, 0, 0.3),
-                0 0 0 1px rgba(255, 255, 255, 0.1) inset,
-                0 8px 32px rgba(36, 154, 204, 0.4);
-            position: relative;
-            animation: glow 3s ease-in-out infinite;
-        }
-
-        .logo-icon::before {
-            content: '';
-            position: absolute;
-            inset: -2px;
-            border-radius: 26px;
-            padding: 2px;
-            background: linear-gradient(135deg, rgba(36, 154, 204, 0.5), rgba(255, 255, 255, 0.2));
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            opacity: 0.6;
-        }
-
-        .logo-icon svg {
-            width: 56px;
-            height: 56px;
-            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        .header-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 3.5rem;
-            font-weight: 900;
-            color: white;
-            text-align: center;
-            letter-spacing: 1px;
-            text-shadow: 
-                0 2px 10px rgba(0, 0, 0, 0.3),
-                0 0 30px rgba(36, 154, 204, 0.5),
-                0 4px 20px rgba(0, 0, 0, 0.2);
-            line-height: 1.1;
-            position: relative;
-            animation: fadeIn 1s ease-out 0.3s both;
-        }
-
-        .header-title span {
-            background: linear-gradient(135deg, #FFFFFF 0%, #E0F2FE 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .header-subtitle {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.875rem;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            font-weight: 600;
-            margin-top: 1rem;
-            animation: fadeIn 1s ease-out 0.5s both;
-            position: relative;
-        }
-
-        .header-subtitle::before,
-        .header-subtitle::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            width: 40px;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5));
-        }
-
-        .header-subtitle::before {
-            right: 100%;
-            margin-right: 1rem;
-        }
-
-        .header-subtitle::after {
-            left: 100%;
-            margin-left: 1rem;
-            background: linear-gradient(90deg, rgba(255, 255, 255, 0.5), transparent);
-        }
-
-        .main-card {
-            background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFB 100%);
-            border-radius: 0 0 32px 32px;
-            padding: 3.5rem 3rem;
-            box-shadow: 
-                0 30px 90px rgba(0, 0, 0, 0.3),
-                0 10px 30px rgba(0, 0, 0, 0.2);
-            position: relative;
-            animation: slideInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
-            border-top: 3px solid rgba(36, 154, 204, 0.3);
-        }
-
-        .main-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(36, 154, 204, 0.5),
-                transparent
-            );
-        }
-
-        .message-card {
-            padding: 1.5rem 2rem;
-            border-radius: 20px;
-            margin-bottom: 2.5rem;
-            font-weight: 600;
-            text-align: center;
-            letter-spacing: 0.3px;
-            animation: fadeIn 0.5s ease-out;
-            border: 2px solid;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .message-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            animation: shimmer 2s infinite;
-        }
-
-        .success-message {
-            background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
-            color: #065F46;
-            border-color: #34D399;
-            box-shadow: 0 8px 24px rgba(52, 211, 153, 0.2);
-        }
-
-        .error-message {
-            background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%);
-            color: #991B1B;
-            border-color: #F87171;
-            box-shadow: 0 8px 24px rgba(248, 113, 113, 0.2);
-        }
-
-        .warning-message {
-            background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
-            color: #92400E;
-            border-color: #FBBF24;
-            box-shadow: 0 8px 24px rgba(251, 191, 36, 0.2);
-        }
-
         .form-section {
             margin-bottom: 2rem;
-            animation: fadeIn 0.6s ease-out;
-            animation-fill-mode: both;
+            animation: fadeSlideIn 0.6s ease-out both;
         }
 
-        .form-section:nth-child(1) { animation-delay: 0.4s; }
-        .form-section:nth-child(2) { animation-delay: 0.5s; }
-        .form-section:nth-child(3) { animation-delay: 0.6s; }
-        .form-section:nth-child(4) { animation-delay: 0.7s; }
-        .form-section:nth-child(5) { animation-delay: 0.8s; }
-        .form-section:nth-child(6) { animation-delay: 0.9s; }
-        .form-section:nth-child(7) { animation-delay: 1s; }
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .form-section:nth-child(1) { animation-delay: 0.3s; }
+        .form-section:nth-child(2) { animation-delay: 0.4s; }
+        .form-section:nth-child(3) { animation-delay: 0.5s; }
+        .form-section:nth-child(4) { animation-delay: 0.6s; }
+        .form-section:nth-child(5) { animation-delay: 0.7s; }
+        .form-section:nth-child(6) { animation-delay: 0.8s; }
+        .form-section:nth-child(7) { animation-delay: 0.9s; }
 
         .form-label {
             display: flex;
             align-items: center;
-            gap: 0.625rem;
-            font-size: 0.8125rem;
+            gap: 0.75rem;
+            font-size: 0.875rem;
             font-weight: 700;
             color: var(--ubl-navy);
             margin-bottom: 0.875rem;
@@ -413,17 +346,22 @@
         }
 
         .form-label .icon {
-            font-size: 1.25rem;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+            font-size: 1.5rem;
+            animation: iconBounce 2s ease-in-out infinite;
+        }
+
+        @keyframes iconBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
 
         .form-input, .form-select, .form-textarea {
             width: 100%;
-            padding: 1.125rem 1.5rem;
+            padding: 1.25rem 1.5rem;
             border: 2px solid #E5E7EB;
             border-radius: 16px;
             font-size: 1rem;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Outfit', sans-serif;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             background: white;
             color: var(--ubl-dark);
@@ -436,82 +374,64 @@
             box-shadow: 
                 0 0 0 4px rgba(36, 154, 204, 0.15),
                 0 8px 24px rgba(36, 154, 204, 0.2);
-            transform: translateY(-2px);
+            transform: translateY(-2px) scale(1.01);
         }
 
         .form-input:disabled, .form-select:disabled, .form-textarea:disabled {
             background: #F9FAFB;
             color: #9CA3AF;
             cursor: not-allowed;
-            border-color: #E5E7EB;
-        }
-
-        .form-textarea {
-            resize: vertical;
-            min-height: 120px;
-            font-size: 0.9375rem;
-            line-height: 1.6;
         }
 
         .btn-primary {
             width: 100%;
-            padding: 1.5rem 2.5rem;
+            padding: 1.75rem 2.5rem;
             background: linear-gradient(135deg, var(--ubl-navy) 0%, var(--ubl-accent) 50%, var(--ubl-blue) 100%);
             background-size: 200% 200%;
             color: white;
             border: none;
             border-radius: 18px;
             font-size: 1.25rem;
-            font-weight: 700;
+            font-weight: 800;
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 
-                0 8px 24px rgba(5, 65, 102, 0.35),
-                0 4px 12px rgba(5, 65, 102, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+                0 8px 24px rgba(5, 65, 102, 0.4),
+                0 4px 12px rgba(5, 65, 102, 0.2);
             position: relative;
             overflow: hidden;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
             text-transform: uppercase;
         }
 
         .btn-primary::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             background: linear-gradient(
                 90deg,
                 transparent,
-                rgba(255, 255, 255, 0.3),
+                rgba(255, 255, 255, 0.4),
                 transparent
             );
-            transition: left 0.6s;
+            transform: translateX(-100%);
+            transition: transform 0.6s;
         }
 
         .btn-primary:hover:not(:disabled) {
-            transform: translateY(-3px);
+            transform: translateY(-4px);
             box-shadow: 
-                0 12px 36px rgba(5, 65, 102, 0.45),
-                0 6px 18px rgba(36, 154, 204, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+                0 16px 40px rgba(5, 65, 102, 0.5),
+                0 8px 20px rgba(36, 154, 204, 0.3);
             background-position: 100% 0;
         }
 
         .btn-primary:hover:not(:disabled)::before {
-            left: 100%;
+            transform: translateX(100%);
         }
 
         .btn-primary:active:not(:disabled) {
-            transform: translateY(-1px);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
+            transform: translateY(-2px);
         }
 
         .btn-secondary {
@@ -534,12 +454,11 @@
         .btn-secondary::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 0;
-            height: 100%;
+            inset: 0;
             background: linear-gradient(135deg, var(--ubl-navy) 0%, var(--ubl-accent) 100%);
-            transition: width 0.4s ease;
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
             z-index: -1;
         }
 
@@ -552,249 +471,178 @@
         }
 
         .btn-secondary:hover:not(:disabled)::before {
-            width: 100%;
+            transform: scaleX(1);
         }
 
-        .btn-secondary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
+        /* Location verification states */
         .location-info {
             margin-top: 1.25rem;
-            padding: 1.5rem;
-            background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
-            border: 2px solid #60A5FA;
-            border-radius: 16px;
-            animation: fadeIn 0.5s ease-out;
-            box-shadow: 0 4px 16px rgba(96, 165, 250, 0.15);
-        }
-
-        .location-info-title {
-            font-weight: 700;
-            color: var(--ubl-navy);
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.625rem;
-            font-size: 0.9375rem;
-        }
-
-        .location-detail {
-            font-size: 0.875rem;
-            color: var(--ubl-dark);
-            margin-bottom: 0.625rem;
-            line-height: 1.6;
-        }
-
-        .location-detail:last-child {
-            margin-bottom: 0;
-        }
-
-        .location-detail strong {
-            font-weight: 700;
-            color: var(--ubl-navy);
-        }
-
-        .leave-dates-section {
-            background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
-            border: 2px solid #FBBF24;
-            border-radius: 18px;
             padding: 1.75rem;
-            margin-top: 1.25rem;
-            animation: fadeIn 0.5s ease-out;
-            box-shadow: 0 4px 16px rgba(251, 191, 36, 0.15);
+            border-radius: 20px;
+            animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            border: 2px solid;
+            position: relative;
+            overflow: hidden;
         }
 
-        .leave-dates-title {
-            font-weight: 700;
-            color: #78350F;
-            margin-bottom: 1.25rem;
-            display: flex;
-            align-items: center;
-            gap: 0.625rem;
-            font-size: 0.9375rem;
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
-        .date-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.25rem;
+        .location-info::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(45deg, transparent, currentColor, transparent);
+            animation: borderFlow 3s linear infinite;
+            opacity: 0.1;
         }
 
-        .date-input-wrapper label {
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #78350F;
-            margin-bottom: 0.625rem;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
+        @keyframes borderFlow {
+            to {
+                transform: translateX(100%);
+            }
         }
 
-        .date-input {
-            width: 100%;
-            padding: 0.875rem 1rem;
-            border: 2px solid #FCD34D;
-            border-radius: 12px;
-            font-size: 0.875rem;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.3s ease;
-            background: white;
+        .location-verified {
+            background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+            border-color: var(--success);
         }
 
-        .date-input:focus {
-            outline: none;
-            border-color: #F59E0B;
-            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
-        }
-
-        .leave-hint {
-            font-size: 0.8125rem;
-            color: #92400E;
-            margin-top: 1rem;
-            font-style: italic;
-            line-height: 1.5;
-        }
-
-        .notice {
-            margin-top: 1rem;
-            padding: 1rem 1.25rem;
+        .location-warning {
             background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
-            border-left: 4px solid #F97316;
-            border-radius: 12px;
-            font-size: 0.875rem;
-            color: #9A3412;
+            border-color: var(--warning);
+        }
+
+        /* Message cards with pulse animation */
+        .message-card {
+            padding: 1.75rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
             font-weight: 600;
-            animation: fadeIn 0.5s ease-out;
-            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.1);
-        }
-
-        .footer {
             text-align: center;
-            margin-top: 3rem;
-            padding: 2.5rem 1rem;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.875rem;
-            position: relative;
-            z-index: 1;
+            letter-spacing: 0.3px;
+            animation: messagePulse 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 2px solid;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
         }
 
-        .footer::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, rgba(36, 154, 204, 0.6), transparent);
-            border-radius: 2px;
-        }
-
-        .footer p:last-child {
-            margin-top: 0.5rem;
-            opacity: 0.6;
-        }
-
-        .divider {
-            height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(5, 65, 102, 0.2), transparent);
-            margin: 2.5rem 0;
-            position: relative;
-        }
-
-        .divider::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 8px;
-            height: 8px;
-            background: var(--ubl-blue);
-            border-radius: 50%;
-            box-shadow: 0 0 20px rgba(36, 154, 204, 0.5);
-        }
-
-        /* Responsive Design */
-        @media (max-width: 640px) {
-            .container {
-                padding: 1rem 0.75rem;
+        @keyframes messagePulse {
+            0% {
+                opacity: 0;
+                transform: scale(0.9);
             }
-
-            .header-card {
-                padding: 3rem 1.5rem 2.5rem;
-                border-radius: 28px 28px 0 0;
+            50% {
+                transform: scale(1.02);
             }
-
-            .header-title {
-                font-size: 2.5rem;
-            }
-
-            .main-card {
-                padding: 2.5rem 1.75rem;
-                border-radius: 0 0 28px 28px;
-            }
-
-            .logo-icon {
-                width: 80px;
-                height: 80px;
-            }
-
-            .logo-icon svg {
-                width: 44px;
-                height: 44px;
-            }
-
-            .date-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .header-subtitle::before,
-            .header-subtitle::after {
-                width: 30px;
+            100% {
+                opacity: 1;
+                transform: scale(1);
             }
         }
 
-        /* Loading State */
-        .loading {
-            position: relative;
+        .success-message {
+            background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+            color: #065F46;
+            border-color: var(--success);
         }
 
-        .loading::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            right: 1.5rem;
-            width: 22px;
-            height: 22px;
+        .error-message {
+            background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%);
+            color: #991B1B;
+            border-color: var(--error);
+        }
+
+        .warning-message {
+            background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+            color: #92400E;
+            border-color: var(--warning);
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
             border: 3px solid rgba(255, 255, 255, 0.3);
             border-top-color: white;
             border-radius: 50%;
-            animation: spin 0.7s linear infinite;
-            transform: translateY(-50%);
+            animation: spin 0.6s linear infinite;
         }
 
         @keyframes spin {
-            to { transform: translateY(-50%) rotate(360deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Step indicator */
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(36, 154, 204, 0.05), rgba(16, 185, 129, 0.05));
+            border-radius: 16px;
+        }
+
+        .step {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #E5E7EB;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .step.active {
+            background: linear-gradient(135deg, var(--ubl-blue), var(--success));
+            box-shadow: 0 0 20px rgba(36, 154, 204, 0.6);
+            transform: scale(1.5);
+        }
+
+        .step.completed {
+            background: var(--success);
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .header-title {
+                font-size: 2.5rem;
+            }
+            
+            .main-card {
+                padding: 2rem 1.5rem;
+            }
+            
+            .logo-icon {
+                width: 90px;
+                height: 90px;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Floating Particles -->
-    <div class="particle" style="left: 10%; width: 4px; height: 4px; animation-duration: 15s; animation-delay: 0s;"></div>
-    <div class="particle" style="left: 30%; width: 6px; height: 6px; animation-duration: 20s; animation-delay: 2s;"></div>
-    <div class="particle" style="left: 50%; width: 5px; height: 5px; animation-duration: 18s; animation-delay: 4s;"></div>
-    <div class="particle" style="left: 70%; width: 4px; height: 4px; animation-duration: 22s; animation-delay: 1s;"></div>
-    <div class="particle" style="left: 90%; width: 6px; height: 6px; animation-duration: 17s; animation-delay: 3s;"></div>
+    <!-- Progress bar -->
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <!-- Floating orbs -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
     <div class="container">
         <!-- Header -->
         <div class="header-card">
-            <div class="decoration-circle decoration-circle-1"></div>
-            <div class="decoration-circle decoration-circle-2"></div>
-            
             <div class="logo-container">
                 <div class="logo-icon">
                     <svg fill="white" viewBox="0 0 24 24">
@@ -802,13 +650,22 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="header-title"><span>Attendance System</span></h1>
+                    <h1 class="header-title">Attendance System</h1>
                     <p class="header-subtitle">Learning & Development</p>
                 </div>
             </div>
         </div>
         
         <div class="main-card">
+            <!-- Step Indicator -->
+            <div class="step-indicator">
+                <div class="step" id="step1"></div>
+                <div class="step" id="step2"></div>
+                <div class="step" id="step3"></div>
+                <div class="step" id="step4"></div>
+                <div class="step" id="step5"></div>
+            </div>
+
             <!-- Success Message -->
             <div id="successMsg" style="display: none;" class="message-card success-message">
                 ✓ You're in! Have a productive day today!
@@ -857,29 +714,26 @@
                     <option value="Personal/Sick Leave">Personal/Sick Leave</option>
                     <option value="Annual Leave">Annual Leave</option>
                 </select>
-                <div id="lateNotice" style="display: none;" class="notice">
-                    ⏰ It's past 9:00 AM - "Present" option is no longer available.
-                </div>
             </div>
 
             <!-- Leave Dates -->
             <div id="leaveDatesSection" style="display: none;" class="form-section">
-                <div class="leave-dates-section">
-                    <p class="leave-dates-title">
+                <div style="background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border: 2px solid #FBBF24; border-radius: 18px; padding: 1.75rem; box-shadow: 0 4px 16px rgba(251, 191, 36, 0.15);">
+                    <p style="font-weight: 700; color: #78350F; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.625rem;">
                         <span>📅</span>
                         <span>Select Leave Duration</span>
                     </p>
-                    <div class="date-grid">
-                        <div class="date-input-wrapper">
-                            <label>Start Date</label>
-                            <input type="date" id="leaveStartDate" class="date-input">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                        <div>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #78350F; margin-bottom: 0.625rem; text-transform: uppercase; letter-spacing: 0.8px;">Start Date</label>
+                            <input type="date" id="leaveStartDate" class="form-input" style="padding: 0.875rem 1rem; border-color: #FCD34D;">
                         </div>
-                        <div class="date-input-wrapper">
-                            <label>End Date</label>
-                            <input type="date" id="leaveEndDate" class="date-input">
+                        <div>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #78350F; margin-bottom: 0.625rem; text-transform: uppercase; letter-spacing: 0.8px;">End Date</label>
+                            <input type="date" id="leaveEndDate" class="form-input" style="padding: 0.875rem 1rem; border-color: #FCD34D;">
                         </div>
                     </div>
-                    <p class="leave-hint" id="leaveHint">Leave will be marked for all dates in this range</p>
+                    <p id="leaveHint" style="font-size: 0.8125rem; color: #92400E; margin-top: 1rem; font-style: italic;">Leave will be marked for all dates in this range</p>
                 </div>
             </div>
 
@@ -893,12 +747,12 @@
                     <span id="locationBtnText">Click to Get Location</span>
                 </button>
                 <div id="locationInfo" style="display: none;" class="location-info">
-                    <p class="location-info-title">
+                    <p class="location-info-title" style="font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.625rem; font-size: 0.9375rem;">
                         <span>✓</span>
                         <span>Location Captured</span>
                     </p>
-                    <p class="location-detail"><strong>Coordinates:</strong> <span id="coords"></span></p>
-                    <p class="location-detail"><strong>Address:</strong> <span id="addr"></span></p>
+                    <p style="font-size: 0.875rem; margin-bottom: 0.625rem;"><strong>Coordinates:</strong> <span id="coords"></span></p>
+                    <p style="font-size: 0.875rem;"><strong>Address:</strong> <span id="addr"></span></p>
                 </div>
             </div>
 
@@ -908,21 +762,13 @@
                     <span class="icon">📝</span>
                     <span>Notes (Optional)</span>
                 </label>
-                <textarea id="notes" class="form-textarea" placeholder="Any additional comments..."></textarea>
+                <textarea id="notes" class="form-textarea" rows="3" placeholder="Any additional comments..."></textarea>
             </div>
-
-            <div class="divider"></div>
 
             <!-- Submit Button -->
             <button id="submitBtn" class="btn-primary">
                 <span id="submitText">✓ Submit Attendance</span>
             </button>
-        </div>
-        
-        <!-- Footer -->
-        <div class="footer">
-            <p>© 2026 LS Engineering Pvt. Ltd.</p>
-            <p>L&D Attendance System 2.0</p>
         </div>
     </div>
 
@@ -930,22 +776,41 @@
         const SUBMIT_URL = 'https://script.google.com/macros/s/AKfycbw4blMS4G_mIhNLi2o_TUDo6dWwqaJ2c-Cb6BXiWzLu_0Mm-VLdiHv7QnsRjOsunDWc/exec';
         const CHECK_URL = 'https://script.google.com/macros/s/AKfycbxcHlexL5KZH5SR9OdByejARxIXL1laADLHLiUwxiIgcXk7D7OGBWRpoLYJfmnP4Iod/exec';
         
-        // Office coordinates for each cluster (with 500m radius tolerance)
         const OFFICE_COORDINATES = {
             'South': { lat: 24.8843, lng: 67.08962, name: 'South L&D Center' },
             'Central': { lat: 31.5344, lng: 74.3427, name: 'Central L&D Center' },
             'North': { lat: 33.7261, lng: 73.03982, name: 'North L&D Center' }
         };
-        const OFFICE_RADIUS_KM = 0.5; // 500 meters tolerance
+        const OFFICE_RADIUS_KM = 0.5;
         
         let locationData = null;
         let isSubmitting = false;
         let isLeaveSelected = false;
         let isOutsideOffice = false;
+        let currentStep = 0;
 
-        // Calculate distance between two coordinates using Haversine formula
+        const steps = ['step1', 'step2', 'step3', 'step4', 'step5'];
+
+        function updateProgress() {
+            const progress = (currentStep / steps.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            
+            steps.forEach((stepId, index) => {
+                const stepEl = document.getElementById(stepId);
+                if (index < currentStep) {
+                    stepEl.classList.add('completed');
+                    stepEl.classList.remove('active');
+                } else if (index === currentStep) {
+                    stepEl.classList.add('active');
+                    stepEl.classList.remove('completed');
+                } else {
+                    stepEl.classList.remove('active', 'completed');
+                }
+            });
+        }
+
         function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; // Earth's radius in kilometers
+            const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -955,32 +820,25 @@
             return R * c;
         }
 
-        // Check if location is within office radius
         function isLocationNearOffice(cluster, lat, lng) {
             if (!OFFICE_COORDINATES[cluster]) return false;
-            
             const office = OFFICE_COORDINATES[cluster];
             const distance = calculateDistance(lat, lng, office.lat, office.lng);
-            
             return distance <= OFFICE_RADIUS_KM;
         }
 
-        // Determine actual status based on time (even if user selected "Present")
         function getActualStatus(selectedStatus) {
             if (selectedStatus !== 'Present') {
-                return selectedStatus; // Keep Late, Annual Leave, Personal/Sick Leave as is
+                return selectedStatus;
             }
             
-            // Check current time in Pakistan timezone
             const now = new Date();
             const pakistanTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' }));
             const hours = pakistanTime.getHours();
             const minutes = pakistanTime.getMinutes();
-            
             const currentTotalMinutes = (hours * 60) + minutes;
-            const cutoffTotalMinutes = (9 * 60) + 2; // 9:02 AM
+            const cutoffTotalMinutes = (9 * 60) + 2;
             
-            // If submitted after 9:02 AM, mark as Late even if they selected Present
             if (currentTotalMinutes >= cutoffTotalMinutes) {
                 return 'Late';
             }
@@ -1043,31 +901,12 @@
 
         window.onload = function() {
             checkAndLockForm();
-            checkTimeForPresent();
+            updateProgress();
             
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('leaveStartDate').setAttribute('min', today);
             document.getElementById('leaveEndDate').setAttribute('min', today);
         };
-
-        function checkTimeForPresent() {
-            const now = new Date();
-            const pakistanTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' }));
-            const hours = pakistanTime.getHours();
-            const minutes = pakistanTime.getMinutes();
-            
-            const currentTotalMinutes = (hours * 60) + minutes;
-            const cutoffTotalMinutes = (9 * 60) + 2;
-            
-            if (currentTotalMinutes >= cutoffTotalMinutes) {
-                const presentOption = document.getElementById('presentOption');
-                if (presentOption) {
-                    presentOption.style.display = 'none';
-                    presentOption.disabled = true;
-                }
-                document.getElementById('lateNotice').style.display = 'block';
-            }
-        }
 
         function showError(msg) {
             document.getElementById('errorText').innerHTML = msg;
@@ -1087,45 +926,12 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        document.getElementById('status').addEventListener('change', function() {
-            const status = this.value;
-            const leaveDatesSection = document.getElementById('leaveDatesSection');
-            const leaveStartDate = document.getElementById('leaveStartDate');
-            const leaveHint = document.getElementById('leaveHint');
-            const locationSection = document.getElementById('locationSection');
-            
-            if (status === 'Personal/Sick Leave' || status === 'Annual Leave') {
-                isLeaveSelected = true;
-                leaveDatesSection.style.display = 'block';
-                locationSection.style.display = 'none'; // Hide location for leaves
-                
-                const today = new Date();
-                // Both leave types can be marked 2 days back
-                const twoDaysAgo = new Date(today);
-                twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-                const minDate = twoDaysAgo.toISOString().split('T')[0];
-                leaveStartDate.setAttribute('min', minDate);
-                leaveHint.textContent = 'You can mark leave starting from 2 days ago';
-                
-                // Set default N/A location for leaves
-                locationData = {
-                    lat: 0,
-                    lng: 0,
-                    address: 'N/A'
-                };
-            } else {
-                isLeaveSelected = false;
-                leaveDatesSection.style.display = 'none';
-                locationSection.style.display = 'block'; // Show location for Present/Late
-                locationData = null; // Reset location
-            }
-        });
-
-        document.getElementById('leaveStartDate').addEventListener('change', function() {
-            document.getElementById('leaveEndDate').setAttribute('min', this.value);
-        });
-
         document.getElementById('cluster').addEventListener('change', async function() {
+            if (this.value) {
+                currentStep = 1;
+                updateProgress();
+            }
+            
             const cluster = this.value;
             const employeeSelect = document.getElementById('employeeName');
             
@@ -1175,6 +981,54 @@
             }
         });
 
+        document.getElementById('employeeName').addEventListener('change', function() {
+            if (this.value) {
+                currentStep = 2;
+                updateProgress();
+            }
+        });
+
+        document.getElementById('status').addEventListener('change', function() {
+            if (this.value) {
+                currentStep = 3;
+                updateProgress();
+            }
+            
+            const status = this.value;
+            const leaveDatesSection = document.getElementById('leaveDatesSection');
+            const leaveStartDate = document.getElementById('leaveStartDate');
+            const leaveHint = document.getElementById('leaveHint');
+            const locationSection = document.getElementById('locationSection');
+            
+            if (status === 'Personal/Sick Leave' || status === 'Annual Leave') {
+                isLeaveSelected = true;
+                leaveDatesSection.style.display = 'block';
+                locationSection.style.display = 'none';
+                
+                const today = new Date();
+                const twoDaysAgo = new Date(today);
+                twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+                const minDate = twoDaysAgo.toISOString().split('T')[0];
+                leaveStartDate.setAttribute('min', minDate);
+                leaveHint.textContent = 'You can mark leave starting from 2 days ago';
+                
+                locationData = {
+                    lat: 0,
+                    lng: 0,
+                    address: 'N/A'
+                };
+            } else {
+                isLeaveSelected = false;
+                leaveDatesSection.style.display = 'none';
+                locationSection.style.display = 'block';
+                locationData = null;
+            }
+        });
+
+        document.getElementById('leaveStartDate').addEventListener('change', function() {
+            document.getElementById('leaveEndDate').setAttribute('min', this.value);
+        });
+
         document.getElementById('locationBtn').onclick = function() {
             const btn = this;
             const btnText = document.getElementById('locationBtnText');
@@ -1185,15 +1039,13 @@
                 return;
             }
             
-            btnText.textContent = '⏳ Getting location...';
+            btnText.innerHTML = '<span class="loading-spinner"></span> Getting location...';
             btn.disabled = true;
-            btn.classList.add('loading');
             
             if (!navigator.geolocation) {
                 showError('Your browser does not support location services');
                 btnText.textContent = 'Click to Get Location';
                 btn.disabled = false;
-                btn.classList.remove('loading');
                 return;
             }
             
@@ -1220,20 +1072,17 @@
                         document.getElementById('addr').textContent = locationData.address;
                     }
                     
-                    // Check if location is near office
                     const nearOffice = isLocationNearOffice(cluster, locationData.lat, locationData.lng);
                     const locationInfoDiv = document.getElementById('locationInfo');
                     
                     if (nearOffice) {
                         isOutsideOffice = false;
-                        locationInfoDiv.style.background = 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)';
-                        locationInfoDiv.style.borderColor = '#34D399';
+                        locationInfoDiv.className = 'location-info location-verified';
                         document.querySelector('.location-info-title').innerHTML = '<span>✓</span><span>Location Verified - At ' + OFFICE_COORDINATES[cluster].name + '</span>';
                         document.querySelector('.location-info-title').style.color = '#065F46';
                     } else {
                         isOutsideOffice = true;
-                        locationInfoDiv.style.background = 'linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)';
-                        locationInfoDiv.style.borderColor = '#F97316';
+                        locationInfoDiv.className = 'location-info location-warning';
                         const distance = calculateDistance(
                             locationData.lat, 
                             locationData.lng, 
@@ -1241,28 +1090,21 @@
                             OFFICE_COORDINATES[cluster].lng
                         );
                         document.querySelector('.location-info-title').innerHTML = 
-                            '<span>⚠️</span><span>Warning: You are ' + distance.toFixed(2) + ' km away from ' + OFFICE_COORDINATES[cluster].name + '</span>';
+                            '<span>⚠️</span><span>Warning: ' + distance.toFixed(2) + ' km from ' + OFFICE_COORDINATES[cluster].name + '</span>';
                         document.querySelector('.location-info-title').style.color = '#9A3412';
-                        
-                        // Show additional message
-                        const warningMsg = document.createElement('p');
-                        warningMsg.className = 'location-detail';
-                        warningMsg.style.color = '#9A3412';
-                        warningMsg.style.fontWeight = '600';
-                        warningMsg.innerHTML = '⚠️ You can still submit, but please confirm this is your actual location.';
-                        locationInfoDiv.appendChild(warningMsg);
                     }
                     
                     locationInfoDiv.style.display = 'block';
                     btnText.textContent = nearOffice ? '✓ Location Verified' : '⚠️ Location Captured';
                     btn.disabled = false;
-                    btn.classList.remove('loading');
+                    
+                    currentStep = 4;
+                    updateProgress();
                 },
                 function(error) {
                     showError('Could not get location. Please enable location permissions.');
                     btnText.textContent = 'Click to Get Location';
                     btn.disabled = false;
-                    btn.classList.remove('loading');
                 },
                 {
                     enableHighAccuracy: true,
@@ -1333,7 +1175,6 @@
                 return;
             }
             
-            // Show confirmation if marking from outside office
             if (isOutsideOffice && !isLeaveSelected) {
                 const confirmSubmit = confirm(
                     'You are marking attendance from outside the L&D Center.\n\n' +
@@ -1345,10 +1186,8 @@
                 }
             }
             
-            // Get actual status (may override "Present" to "Late" based on time)
             const actualStatus = getActualStatus(selectedStatus);
             
-            // Show notification if status was changed from Present to Late
             if (selectedStatus === 'Present' && actualStatus === 'Late') {
                 const proceedLate = confirm(
                     'It is past 9:02 AM. Your attendance will be marked as "Late" instead of "Present".\n\n' +
@@ -1362,8 +1201,10 @@
             
             isSubmitting = true;
             submitBtn.disabled = true;
-            submitText.textContent = '⏳ Submitting...';
-            submitBtn.classList.add('loading');
+            submitText.innerHTML = '<span class="loading-spinner"></span> Submitting...';
+            
+            currentStep = 5;
+            updateProgress();
             
             const now = new Date();
             
@@ -1373,9 +1214,9 @@
                         const payload = {
                             cluster: cluster,
                             name: name,
-                            status: actualStatus, // Use actual status
+                            status: actualStatus,
                             date: leaveDate,
-                            time: '6:00:00 PM', // Fixed time for leaves
+                            time: '6:00:00 PM',
                             latitude: locationData.lat,
                             longitude: locationData.lng,
                             address: locationData.address,
@@ -1405,7 +1246,7 @@
                     const payload = {
                         cluster: cluster,
                         name: name,
-                        status: actualStatus, // Use actual status (may be Late even if Present was selected)
+                        status: actualStatus,
                         date: now.toLocaleDateString('en-US'),
                         time: now.toLocaleTimeString('en-US'),
                         latitude: locationData.lat,
@@ -1442,7 +1283,6 @@
                 isSubmitting = false;
                 submitBtn.disabled = false;
                 submitText.textContent = '✓ Submit Attendance';
-                submitBtn.classList.remove('loading');
             }
         };
     </script>
