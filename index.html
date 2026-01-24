@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UBL Attendance Tracker</title>
+    <title>L&D Attendance System 2.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -876,7 +876,6 @@
             'South': [
                 'Abdus Samad',
                 'Aliza Khan',
-                'Farrukh Ali Khan',
                 'Fouzia Aslam',
                 'Jason Michael Clive Dsouza',
                 'Nabeel ur Rehman',
@@ -884,12 +883,12 @@
                 'Syeda Kanwal Sultana'
             ],
             'Central': [
+                'Farrukh Ali Khan',
                 'Javed Hussain',
                 'Khadija Adil',
                 'Khawaja Fahad Tabish',
                 'Nadia Batool',
                 'Radiya Faysal',
-                'Rizwan Hameed',
                 'Sauood Sadiq'
             ],
             'North': [
@@ -1190,7 +1189,7 @@
             
             if (selectedStatus === 'Present' && actualStatus === 'Late') {
                 const proceedLate = confirm(
-                    'It is past 9:02 AM. Your attendance will be marked as "Late" instead of "Present".\n\n' +
+                    'It is past 9:00 AM. Your attendance will be marked as "Late" instead of "Present".\n\n' +
                     'Do you want to proceed?'
                 );
                 
