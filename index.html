@@ -959,7 +959,6 @@
             'South': [
                 'Abdus Samad',
                 'Aliza Khan',
-                'Farrukh Ali Khan',
                 'Fouzia Aslam',
                 'Jason Michael Clive Dsouza',
                 'Nabeel ur Rehman',
@@ -967,6 +966,7 @@
                 'Syeda Kanwal Sultana'
             ],
             'Central': [
+                'Farrukh Ali Khan',
                 'Javed Hussain',
                 'Khadija Adil',
                 'Khawaja Fahad Tabish',
@@ -1072,6 +1072,12 @@
             
             if (cluster && employees[cluster]) {
                 try {
+                    // Check current time
+                    const now = new Date();
+                    const pakistanTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' }));
+                    const hours = pakistanTime.getHours();
+                    const isAfterNoon = hours >= 12;
+                    
                     const response = await fetch(CHECK_URL);
                     const submittedToday = await response.json();
                     
@@ -1085,7 +1091,9 @@
                     employeeSelect.disabled = false;
                     
                     employees[cluster].forEach(name => {
-                        if (!submittedNames.has(name)) {
+                        // After 12 PM, show ALL employees (even those who submitted)
+                        // Before 12 PM, only show those who haven't submitted
+                        if (isAfterNoon || !submittedNames.has(name)) {
                             const option = document.createElement('option');
                             option.value = name;
                             option.textContent = name;
@@ -1093,7 +1101,7 @@
                         }
                     });
                     
-                    if (employeeSelect.options.length === 1) {
+                    if (employeeSelect.options.length === 1 && !isAfterNoon) {
                         employeeSelect.innerHTML = '<option value="">✓ All employees have submitted today</option>';
                     }
                 } catch (error) {
