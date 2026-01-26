@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>L&D Attendance System 2.0</title>
+    <title>UBL Attendance Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -711,9 +711,30 @@
                     <option value="">-- Select Status --</option>
                     <option value="Present" id="presentOption">Present</option>
                     <option value="Late">Late</option>
+                    <option value="Early Out/Half Day" id="earlyOutOption" style="display: none;">Early Out / Half Day</option>
                     <option value="Personal/Sick Leave">Personal/Sick Leave</option>
                     <option value="Annual Leave">Annual Leave</option>
                 </select>
+            </div>
+
+            <!-- Early Out Time Selection -->
+            <div id="earlyOutSection" style="display: none;" class="form-section">
+                <div style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border: 2px solid #60A5FA; border-radius: 18px; padding: 1.75rem; box-shadow: 0 4px 16px rgba(96, 165, 250, 0.15); animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);">
+                    <p style="font-weight: 700; color: #1E40AF; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.625rem;">
+                        <span>⏰</span>
+                        <span>Select Early Out Time</span>
+                    </p>
+                    <div>
+                        <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #1E40AF; margin-bottom: 0.625rem; text-transform: uppercase; letter-spacing: 0.8px;">Leaving Time</label>
+                        <input type="time" id="earlyOutTime" class="form-input" min="13:00" max="16:30" style="padding: 0.875rem 1rem; border-color: #60A5FA;">
+                    </div>
+                    <div id="earlyOutInfo" style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 12px; border: 1px solid #BFDBFE; display: none;">
+                        <p style="font-size: 0.875rem; color: #1E40AF; margin-bottom: 0.5rem;"><strong>Type:</strong> <span id="earlyOutType"></span></p>
+                        <p style="font-size: 0.875rem; color: #1E40AF; margin-bottom: 0.5rem;"><strong>Hours Early:</strong> <span id="hoursEarly"></span></p>
+                        <p style="font-size: 0.875rem; color: #1E40AF;"><strong>Time Remaining:</strong> <span id="timeRemaining"></span></p>
+                    </div>
+                    <p id="earlyOutHint" style="font-size: 0.8125rem; color: #1E3A8A; margin-top: 1rem; font-style: italic;">Select your leaving time (1:00 PM - 4:30 PM). Half Day = 1:00 PM, Early Out = 3:30 PM or later</p>
+                </div>
             </div>
 
             <!-- Leave Dates -->
@@ -820,11 +841,40 @@
             return R * c;
         }
 
+        function findNearestCenter(lat, lng) {
+            let nearest = null;
+            let minDistance = Infinity;
+            
+            for (const [clusterName, coords] of Object.entries(OFFICE_COORDINATES)) {
+                const distance = calculateDistance(lat, lng, coords.lat, coords.lng);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearest = {
+                        cluster: clusterName,
+                        name: coords.name,
+                        distance: distance
+                    };
+                }
+            }
+            
+            return nearest;
+        }
+
         function isLocationNearOffice(cluster, lat, lng) {
             if (!OFFICE_COORDINATES[cluster]) return false;
             const office = OFFICE_COORDINATES[cluster];
             const distance = calculateDistance(lat, lng, office.lat, office.lng);
             return distance <= OFFICE_RADIUS_KM;
+        }
+
+        function isLocationNearAnyOffice(lat, lng) {
+            for (const coords of Object.values(OFFICE_COORDINATES)) {
+                const distance = calculateDistance(lat, lng, coords.lat, coords.lng);
+                if (distance <= OFFICE_RADIUS_KM) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         function getActualStatus(selectedStatus) {
@@ -854,20 +904,53 @@
 
         function checkAndLockForm() {
             if (hasSubmittedToday()) {
-                document.getElementById('cluster').disabled = true;
-                document.getElementById('employeeName').disabled = true;
-                document.getElementById('status').disabled = true;
-                document.getElementById('locationBtn').disabled = true;
-                document.getElementById('notes').disabled = true;
-                document.getElementById('submitBtn').disabled = true;
+                const now = new Date();
+                const pakistanTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' }));
+                const hours = pakistanTime.getHours();
                 
-                const errorMsg = document.getElementById('errorMsg');
-                const errorText = document.getElementById('errorText');
-                errorText.innerHTML = '🔒 Attendance already submitted from this device today.<br>Please use a different device or try again tomorrow.';
-                errorMsg.style.display = 'block';
-                errorMsg.className = 'message-card warning-message';
-                
-                return true;
+                // After 12 PM, only allow Half Day option
+                if (hours >= 12) {
+                    // Lock most fields but allow Half Day
+                    document.getElementById('cluster').disabled = false;
+                    document.getElementById('employeeName').disabled = false;
+                    document.getElementById('status').disabled = false;
+                    document.getElementById('notes').disabled = false;
+                    document.getElementById('submitBtn').disabled = false;
+                    
+                    // Disable all status options except Half Day
+                    const statusSelect = document.getElementById('status');
+                    const options = statusSelect.getElementsByTagName('option');
+                    for (let option of options) {
+                        if (option.value !== 'Early Out/Half Day' && option.value !== '') {
+                            option.disabled = true;
+                        }
+                    }
+                    
+                    // Show info message instead of error
+                    const errorMsg = document.getElementById('errorMsg');
+                    const errorText = document.getElementById('errorText');
+                    errorText.innerHTML = 'ℹ️ You have already marked attendance today.<br>After 12:00 PM, you can mark Early Out / Half Day if needed.';
+                    errorMsg.style.display = 'block';
+                    errorMsg.className = 'message-card warning-message';
+                    
+                    return false; // Don't lock the form
+                } else {
+                    // Before 12 PM, lock everything
+                    document.getElementById('cluster').disabled = true;
+                    document.getElementById('employeeName').disabled = true;
+                    document.getElementById('status').disabled = true;
+                    document.getElementById('locationBtn').disabled = true;
+                    document.getElementById('notes').disabled = true;
+                    document.getElementById('submitBtn').disabled = true;
+                    
+                    const errorMsg = document.getElementById('errorMsg');
+                    const errorText = document.getElementById('errorText');
+                    errorText.innerHTML = '🔒 Attendance already submitted from this device today.<br>Please use a different device or try again tomorrow.';
+                    errorMsg.style.display = 'block';
+                    errorMsg.className = 'message-card warning-message';
+                    
+                    return true;
+                }
             }
             return false;
         }
@@ -876,6 +959,7 @@
             'South': [
                 'Abdus Samad',
                 'Aliza Khan',
+                'Farrukh Ali Khan',
                 'Fouzia Aslam',
                 'Jason Michael Clive Dsouza',
                 'Nabeel ur Rehman',
@@ -883,12 +967,12 @@
                 'Syeda Kanwal Sultana'
             ],
             'Central': [
-                'Farrukh Ali Khan',
                 'Javed Hussain',
                 'Khadija Adil',
                 'Khawaja Fahad Tabish',
                 'Nadia Batool',
                 'Radiya Faysal',
+                'Rizwan Hameed',
                 'Sauood Sadiq'
             ],
             'North': [
@@ -901,11 +985,60 @@
         window.onload = function() {
             checkAndLockForm();
             updateProgress();
+            checkTimeForEarlyOut();
             
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('leaveStartDate').setAttribute('min', today);
             document.getElementById('leaveEndDate').setAttribute('min', today);
         };
+
+        function checkTimeForEarlyOut() {
+            const now = new Date();
+            const pakistanTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' }));
+            const hours = pakistanTime.getHours();
+            
+            // Enable Early Out option after 12:00 PM (noon)
+            if (hours >= 12) {
+                const earlyOutOption = document.getElementById('earlyOutOption');
+                if (earlyOutOption) {
+                    earlyOutOption.style.display = 'block';
+                }
+            }
+        }
+
+        function calculateEarlyOut(leavingTime) {
+            // Parse the leaving time
+            const [hours, minutes] = leavingTime.split(':').map(Number);
+            const leavingMinutes = (hours * 60) + minutes;
+            
+            // End of day is 5:30 PM (17:30)
+            const endOfDayMinutes = (17 * 60) + 30;
+            
+            // Calculate difference in minutes
+            const minutesDifference = endOfDayMinutes - leavingMinutes;
+            
+            // Convert to hours and minutes
+            const hoursEarly = Math.floor(minutesDifference / 60);
+            const minutesEarly = minutesDifference % 60;
+            
+            // Determine type
+            let type;
+            if (leavingMinutes <= (13 * 60)) { // 1:00 PM or earlier
+                type = 'Half Day';
+            } else if (leavingMinutes >= (15 * 60) + 30) { // 3:30 PM or later
+                type = 'Early Out';
+            } else {
+                type = 'Early Out';
+            }
+            
+            return {
+                type: type,
+                hoursEarly: hoursEarly,
+                minutesEarly: minutesEarly,
+                totalMinutes: minutesDifference,
+                formattedTime: `${hoursEarly}h ${minutesEarly}m`
+            };
+        }
 
         function showError(msg) {
             document.getElementById('errorText').innerHTML = msg;
@@ -995,9 +1128,14 @@
             
             const status = this.value;
             const leaveDatesSection = document.getElementById('leaveDatesSection');
+            const earlyOutSection = document.getElementById('earlyOutSection');
             const leaveStartDate = document.getElementById('leaveStartDate');
             const leaveHint = document.getElementById('leaveHint');
             const locationSection = document.getElementById('locationSection');
+            
+            // Hide all optional sections first
+            leaveDatesSection.style.display = 'none';
+            earlyOutSection.style.display = 'none';
             
             if (status === 'Personal/Sick Leave' || status === 'Annual Leave') {
                 isLeaveSelected = true;
@@ -1016,12 +1154,36 @@
                     lng: 0,
                     address: 'N/A'
                 };
+            } else if (status === 'Early Out/Half Day') {
+                isLeaveSelected = true; // Set to true to skip location requirement
+                earlyOutSection.style.display = 'block';
+                locationSection.style.display = 'none'; // Hide location for early out
+                
+                // Set N/A location for early out
+                locationData = {
+                    lat: 0,
+                    lng: 0,
+                    address: 'N/A'
+                };
             } else {
                 isLeaveSelected = false;
-                leaveDatesSection.style.display = 'none';
                 locationSection.style.display = 'block';
                 locationData = null;
             }
+        });
+
+        document.getElementById('earlyOutTime').addEventListener('change', function() {
+            const time = this.value;
+            if (!time) return;
+            
+            const earlyOutInfo = document.getElementById('earlyOutInfo');
+            const calculation = calculateEarlyOut(time);
+            
+            document.getElementById('earlyOutType').textContent = calculation.type;
+            document.getElementById('hoursEarly').textContent = calculation.formattedTime;
+            document.getElementById('timeRemaining').textContent = 'Leaving ' + calculation.formattedTime + ' before 5:30 PM';
+            
+            earlyOutInfo.style.display = 'block';
         });
 
         document.getElementById('leaveStartDate').addEventListener('change', function() {
@@ -1071,26 +1233,55 @@
                         document.getElementById('addr').textContent = locationData.address;
                     }
                     
-                    const nearOffice = isLocationNearOffice(cluster, locationData.lat, locationData.lng);
                     const locationInfoDiv = document.getElementById('locationInfo');
+                    const nearestCenter = findNearestCenter(locationData.lat, locationData.lng);
+                    const atAnyOffice = isLocationNearAnyOffice(locationData.lat, locationData.lng);
+                    const atOwnCluster = isLocationNearOffice(cluster, locationData.lat, locationData.lng);
                     
-                    if (nearOffice) {
+                    if (atAnyOffice) {
+                        // At any L&D center (could be own cluster or visiting another)
                         isOutsideOffice = false;
                         locationInfoDiv.className = 'location-info location-verified';
-                        document.querySelector('.location-info-title').innerHTML = '<span>✓</span><span>Location Verified - At ' + OFFICE_COORDINATES[cluster].name + '</span>';
-                        document.querySelector('.location-info-title').style.color = '#065F46';
+                        
+                        if (atOwnCluster) {
+                            // At their own cluster center
+                            document.querySelector('.location-info-title').innerHTML = 
+                                '<span>✓</span><span>Location Verified - At Your ' + OFFICE_COORDINATES[cluster].name + '</span>';
+                            document.querySelector('.location-info-title').style.color = '#065F46';
+                        } else {
+                            // Visiting a different cluster center
+                            document.querySelector('.location-info-title').innerHTML = 
+                                '<span>✓</span><span>Visiting ' + nearestCenter.name + ' (Distance: ' + nearestCenter.distance.toFixed(2) + ' km)</span>';
+                            document.querySelector('.location-info-title').style.color = '#065F46';
+                            
+                            // Add info message about cross-cluster visit
+                            const existingInfo = locationInfoDiv.querySelector('.cross-cluster-info');
+                            if (existingInfo) existingInfo.remove();
+                            
+                            const crossClusterInfo = document.createElement('p');
+                            crossClusterInfo.className = 'cross-cluster-info';
+                            crossClusterInfo.style.cssText = 'font-size: 0.875rem; margin-top: 0.75rem; padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; color: #065F46; font-weight: 600; border-left: 3px solid #10B981;';
+                            crossClusterInfo.innerHTML = '📍 Cross-cluster attendance detected. Your attendance will be marked at ' + nearestCenter.name + '.';
+                            locationInfoDiv.appendChild(crossClusterInfo);
+                        }
                     } else {
+                        // Outside all office locations
                         isOutsideOffice = true;
                         locationInfoDiv.className = 'location-info location-warning';
-                        const distance = calculateDistance(
-                            locationData.lat, 
-                            locationData.lng, 
-                            OFFICE_COORDINATES[cluster].lat, 
-                            OFFICE_COORDINATES[cluster].lng
-                        );
+                        
                         document.querySelector('.location-info-title').innerHTML = 
-                            '<span>⚠️</span><span>Warning: ' + distance.toFixed(2) + ' km from ' + OFFICE_COORDINATES[cluster].name + '</span>';
+                            '<span>⚠️</span><span>Outside L&D Centers - Nearest: ' + nearestCenter.name + ' (' + nearestCenter.distance.toFixed(2) + ' km away)</span>';
                         document.querySelector('.location-info-title').style.color = '#9A3412';
+                        
+                        // Add warning message
+                        const existingWarning = locationInfoDiv.querySelector('.outside-office-warning');
+                        if (existingWarning) existingWarning.remove();
+                        
+                        const warningInfo = document.createElement('p');
+                        warningInfo.className = 'outside-office-warning';
+                        warningInfo.style.cssText = 'font-size: 0.875rem; margin-top: 0.75rem; padding: 0.75rem; background: rgba(251, 191, 36, 0.1); border-radius: 8px; color: #92400E; font-weight: 600; border-left: 3px solid #F59E0B;';
+                        warningInfo.innerHTML = '⚠️ You are marking from outside all L&D Centers. Please inform Mr. Abdus Samad if attending training at a different location.';
+                        locationInfoDiv.appendChild(warningInfo);
                     }
                     
                     locationInfoDiv.style.display = 'block';
@@ -1151,6 +1342,17 @@
                 return;
             }
             
+            // Validate early out time if selected
+            let earlyOutDetails = null;
+            if (selectedStatus === 'Early Out/Half Day') {
+                const earlyOutTime = document.getElementById('earlyOutTime').value;
+                if (!earlyOutTime) {
+                    showError('Please select your leaving time');
+                    return;
+                }
+                earlyOutDetails = calculateEarlyOut(earlyOutTime);
+            }
+            
             let leaveDates = [];
             if (selectedStatus === 'Personal/Sick Leave' || selectedStatus === 'Annual Leave') {
                 const startDate = document.getElementById('leaveStartDate').value;
@@ -1174,10 +1376,15 @@
                 return;
             }
             
-            if (isOutsideOffice && !isLeaveSelected) {
+            // Check if at any L&D center or outside
+            const atAnyOffice = locationData && isLocationNearAnyOffice(locationData.lat, locationData.lng);
+            
+            // Show confirmation ONLY if marking from outside all L&D centers
+            if (isOutsideOffice && !isLeaveSelected && !atAnyOffice) {
                 const confirmSubmit = confirm(
-                    'You are marking attendance from outside the L&D Center.\n\n' +
-                    'Are you sure you want to submit from this location?'
+                    'You are marking attendance from outside all L&D Centers.\n\n' +
+                    'Please inform Mr. Abdus Samad if you are attending training at a different location.\n\n' +
+                    'Do you want to proceed?'
                 );
                 
                 if (!confirmSubmit) {
@@ -1189,7 +1396,7 @@
             
             if (selectedStatus === 'Present' && actualStatus === 'Late') {
                 const proceedLate = confirm(
-                    'It is past 9:00 AM. Your attendance will be marked as "Late" instead of "Present".\n\n' +
+                    'It is past 9:02 AM. Your attendance will be marked as "Late" instead of "Present".\n\n' +
                     'Do you want to proceed?'
                 );
                 
@@ -1236,22 +1443,49 @@
                     
                     showSuccess('✓ Leave submitted for ' + leaveDates.length + ' day(s)!');
                     
+                    // Reset button state
+                    isSubmitting = false;
+                    submitBtn.disabled = false;
+                    submitText.textContent = '✓ Submit Attendance';
+                    
                     setTimeout(() => {
                         document.getElementById('successMsg').style.display = 'none';
                         checkAndLockForm();
                     }, 5000);
                     
                 } else {
+                    let statusToSubmit = actualStatus;
+                    let notesToSubmit = notes;
+                    
+                    // Determine location status
+                    const nearestCenter = findNearestCenter(locationData.lat, locationData.lng);
+                    const atAnyOffice = isLocationNearAnyOffice(locationData.lat, locationData.lng);
+                    const atOwnCluster = isLocationNearOffice(cluster, locationData.lat, locationData.lng);
+                    
+                    if (atAnyOffice && !atOwnCluster) {
+                        // Cross-cluster visit
+                        notesToSubmit += ` [Visiting ${nearestCenter.name}]`;
+                    } else if (!atAnyOffice) {
+                        // Outside all centers
+                        notesToSubmit += ` [Marked from outside office - Nearest: ${nearestCenter.name} (${nearestCenter.distance.toFixed(2)} km)]`;
+                    }
+                    
+                    // Add early out details to notes
+                    if (earlyOutDetails) {
+                        statusToSubmit = earlyOutDetails.type; // "Half Day" or "Early Out"
+                        notesToSubmit += ` | Left at ${document.getElementById('earlyOutTime').value} | ${earlyOutDetails.formattedTime} early | Time remaining: ${earlyOutDetails.formattedTime} until 5:30 PM`;
+                    }
+                    
                     const payload = {
                         cluster: cluster,
                         name: name,
-                        status: actualStatus,
+                        status: statusToSubmit,
                         date: now.toLocaleDateString('en-US'),
                         time: now.toLocaleTimeString('en-US'),
                         latitude: locationData.lat,
                         longitude: locationData.lng,
                         address: locationData.address,
-                        notes: notes + (isOutsideOffice ? ' [Marked from outside office]' : '')
+                        notes: notesToSubmit
                     };
                     
                     const formData = new FormData();
@@ -1267,8 +1501,20 @@
                     const today = new Date().toLocaleDateString('en-US');
                     localStorage.setItem('lastSubmitDate', today);
                     
-                    const statusText = actualStatus === 'Late' ? 'marked as Late' : 'in';
-                    showSuccess('✓ You\'re ' + statusText + '! Have a productive day today!');
+                    let successMessage;
+                    if (earlyOutDetails) {
+                        successMessage = '✓ ' + earlyOutDetails.type + ' marked successfully! See you tomorrow.';
+                    } else {
+                        const statusText = actualStatus === 'Late' ? 'marked as Late' : 'in';
+                        successMessage = '✓ You\'re ' + statusText + '! Have a productive day today!';
+                    }
+                    
+                    showSuccess(successMessage);
+                    
+                    // Reset button state
+                    isSubmitting = false;
+                    submitBtn.disabled = false;
+                    submitText.textContent = '✓ Submit Attendance';
                     
                     setTimeout(() => {
                         document.getElementById('successMsg').style.display = 'none';
