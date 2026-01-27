@@ -1004,6 +1004,19 @@
                     earlyOutOption.style.display = 'block';
                 }
             }
+            
+            // Hide Present option after 9:02 AM
+            const minutes = pakistanTime.getMinutes();
+            const currentTotalMinutes = (hours * 60) + minutes;
+            const cutoffTotalMinutes = (9 * 60) + 2;
+            
+            if (currentTotalMinutes >= cutoffTotalMinutes) {
+                const presentOption = document.getElementById('presentOption');
+                if (presentOption) {
+                    presentOption.style.display = 'none';
+                    presentOption.disabled = true;
+                }
+            }
         }
 
         function calculateEarlyOut(leavingTime) {
@@ -1420,7 +1433,11 @@
             currentStep = 5;
             updateProgress();
             
+            // CRITICAL: Capture timestamp at submission time, not page load
             const now = new Date();
+            const pakistanTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' }));
+            const submissionDate = pakistanTime.toLocaleDateString('en-US');
+            const submissionTime = pakistanTime.toLocaleTimeString('en-US');
             
             try {
                 if (leaveDates.length > 0) {
@@ -1488,8 +1505,8 @@
                         cluster: cluster,
                         name: name,
                         status: statusToSubmit,
-                        date: now.toLocaleDateString('en-US'),
-                        time: now.toLocaleTimeString('en-US'),
+                        date: submissionDate, // Use captured submission date
+                        time: submissionTime, // Use captured submission time
                         latitude: locationData.lat,
                         longitude: locationData.lng,
                         address: locationData.address,
