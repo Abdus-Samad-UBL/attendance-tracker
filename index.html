@@ -798,11 +798,10 @@
         const CHECK_URL = 'https://script.google.com/macros/s/AKfycbxcHlexL5KZH5SR9OdByejARxIXL1laADLHLiUwxiIgcXk7D7OGBWRpoLYJfmnP4Iod/exec';
         
         const OFFICE_COORDINATES = {
-            'South': { lat: 24.8843, lng: 67.08962, name: 'South L&D Center' },
-            'Central': { lat: 31.5344, lng: 74.3427, name: 'Central L&D Center' },
-            'North': { lat: 33.7261, lng: 73.03982, name: 'North L&D Center' }
+            'South': { lat: 24.8843, lng: 67.08962, name: 'South L&D Center', radius: 0.075 }, // 75 meters
+            'Central': { lat: 31.5344, lng: 74.3427, name: 'Central L&D Center', radius: 0.7 }, // 700 meters
+            'North': { lat: 33.7228317, lng: 73.0785783, name: 'North L&D Center', radius: 0.5 } // 500 meters
         };
-        const OFFICE_RADIUS_KM = 0.5;
         
         let locationData = null;
         let isSubmitting = false;
@@ -852,7 +851,8 @@
                     nearest = {
                         cluster: clusterName,
                         name: coords.name,
-                        distance: distance
+                        distance: distance,
+                        radius: coords.radius
                     };
                 }
             }
@@ -864,13 +864,13 @@
             if (!OFFICE_COORDINATES[cluster]) return false;
             const office = OFFICE_COORDINATES[cluster];
             const distance = calculateDistance(lat, lng, office.lat, office.lng);
-            return distance <= OFFICE_RADIUS_KM;
+            return distance <= office.radius;
         }
 
         function isLocationNearAnyOffice(lat, lng) {
             for (const coords of Object.values(OFFICE_COORDINATES)) {
                 const distance = calculateDistance(lat, lng, coords.lat, coords.lng);
-                if (distance <= OFFICE_RADIUS_KM) {
+                if (distance <= coords.radius) {
                     return true;
                 }
             }
@@ -1417,7 +1417,7 @@
             
             if (selectedStatus === 'Present' && actualStatus === 'Late') {
                 const proceedLate = confirm(
-                    'It is past 9:02 AM. Your attendance will be marked as "Late" instead of "Present".\n\n' +
+                    'It is past 9:00 AM. Your attendance will be marked as "Late" instead of "Present".\n\n' +
                     'Do you want to proceed?'
                 );
                 
