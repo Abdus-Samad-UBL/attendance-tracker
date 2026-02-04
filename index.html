@@ -1088,7 +1088,7 @@
                     const now = new Date();
                     const pakistanTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' }));
                     const hours = pakistanTime.getHours();
-                    const isAfterNoon = hours >= 14;
+                    const isAfterNoon = hours >= 15;
                     
                     const response = await fetch(CHECK_URL);
                     const submittedToday = await response.json();
