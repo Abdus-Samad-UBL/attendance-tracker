@@ -997,7 +997,7 @@
             const hours = pakistanTime.getHours();
             
             // Enable Early Out option after 12:00 PM (noon)
-            if (hours >= 12) {
+            if (hours >= 14) {
                 const earlyOutOption = document.getElementById('earlyOutOption');
                 if (earlyOutOption) {
                     earlyOutOption.style.display = 'block';
@@ -1088,7 +1088,7 @@
                     const now = new Date();
                     const pakistanTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' }));
                     const hours = pakistanTime.getHours();
-                    const isAfterNoon = hours >= 12;
+                    const isAfterNoon = hours >= 14;
                     
                     const response = await fetch(CHECK_URL);
                     const submittedToday = await response.json();
