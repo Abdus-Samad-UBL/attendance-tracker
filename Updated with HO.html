@@ -910,7 +910,7 @@
                 const hours = pakistanTime.getHours();
                 
                 // After 12 PM, only allow Half Day option
-                if (hours >= 14) {
+                if (hours >= 12) {
                     // Lock most fields but allow Half Day
                     document.getElementById('cluster').disabled = false;
                     document.getElementById('employeeName').disabled = false;
@@ -997,7 +997,7 @@
             const hours = pakistanTime.getHours();
             
             // Enable Early Out option after 12:00 PM (noon)
-            if (hours >= 14) {
+            if (hours >= 12) {
                 const earlyOutOption = document.getElementById('earlyOutOption');
                 if (earlyOutOption) {
                     earlyOutOption.style.display = 'block';
@@ -1088,7 +1088,7 @@
                     const now = new Date();
                     const pakistanTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' }));
                     const hours = pakistanTime.getHours();
-                    const isAfterNoon = hours >= 15;
+                    const isAfterNoon = hours >= 12;
                     
                     const response = await fetch(CHECK_URL);
                     const submittedToday = await response.json();
